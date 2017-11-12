@@ -13,7 +13,7 @@ function Main($scope, $http)
     }).error(function(data, status) {
       alert('get data error!');
   });
- 
+
   $scope.refresh = function (){
       $http.get('./json/channels.json').success(function(data) {
         $scope.channels = data;
@@ -24,7 +24,7 @@ function Main($scope, $http)
 // Bitcoin/Lightning network periodic refresh.
 function refreshChannels() {
   var channels = [];
-
+  var test = [];
   lightning.channels(function(channels) {
     sortJsonArray(channels, 'channel');
     fs.writeFileSync('./json/channels.json', JSON.stringify(channels))
