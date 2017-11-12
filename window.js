@@ -13,7 +13,7 @@ function Main($scope, $http)
     }).error(function(data, status) {
       alert('get data error!');
   });
-
+ 
   $scope.refresh = function (){
       $http.get('./json/channels.json').success(function(data) {
         $scope.channels = data;
