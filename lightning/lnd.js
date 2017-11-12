@@ -21,7 +21,7 @@ exports.getinfo = function(callback) {
   var credentials = grpc.credentials.createSsl(lndCert);
   var lnrpcDescriptor = grpc.load("./config/rpc.proto");
   var lnrpc = lnrpcDescriptor.lnrpc;
-  var lightning = new lnrpc.Lightning('dadserver:10009', credentials);
+  var lightning = new lnrpc.Lightning('localhost:10009', credentials);
 
   lightning.GetInfo({}, function(err, response) {
   	console.log('GetInfo:', err);
