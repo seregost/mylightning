@@ -17,7 +17,7 @@ exports.getinfo = function(callback) {
 
   //  Lnd cert is at ~/.lnd/tls.cert on Linux and
   //  ~/Library/Application Support/Lnd/tls.cert on Mac
-  var lndCert = fs.readFileSync("./config/tls.cert");
+  var lndCert = fs.readFileSync("~/.lnd/tls.cert");
   var credentials = grpc.credentials.createSsl(lndCert);
   var lnrpcDescriptor = grpc.load("./config/rpc.proto");
   var lnrpc = lnrpcDescriptor.lnrpc;
