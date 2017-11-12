@@ -12,47 +12,21 @@ exports.getfunds = function(callback) {
 }
 
 exports.getinfo = function(callback) {
-  var https = require('https');
-  var fs = require('fs');
+  var grpc = require('grpc');
+  var fs = require("fs");
 
-  var options = {
-      ca: fs.readFileSync('./config/tls.cert'),
-      hostname: 'dadserver',
-      port: 8081,
-      path: '/v1/getinfo',
-      method: 'GET'
-  };
-  options.agent = new https.Agent(options);
+  //  Lnd cert is at ~/.lnd/tls.cert on Linux and
+  //  ~/Library/Application Support/Lnd/tls.cert on Mac
+  var lndCert = fs.readFileSync("./config/tls.cert");
+  var credentials = grpc.credentials.createSsl(lndCert);
+  var lnrpcDescriptor = grpc.load("./config/rpc.proto");
+  var lnrpc = lnrpcDescriptor.lnrpc;
+  var lightning = new lnrpc.Lightning('dadserver:10009', credentials);
 
-  var req = https.request(options, (res) => {
-    console.log('statusCode:', res.statusCode);
-    console.log('headers:', res.headers);
-    res.on('data', (d) => {
-      process.stdout.write(d);
-    });
+  lightning.GetInfo({}, function(err, response) {
+  	console.log('GetInfo:', err);
   });
-
-  req.on('error', (e) => {
-    console.error(e);
-  });
-  req.end();
 }
-
-  // var grpc = require('grpc');
-  // var fs = require("fs");
-  //
-  // //  Lnd cert is at ~/.lnd/tls.cert on Linux and
-  // //  ~/Library/Application Support/Lnd/tls.cert on Mac
-  // var lndCert = fs.readFileSync("./config/tls.cert");
-  // var credentials = grpc.credentials.createSsl(lndCert);
-  // var lnrpcDescriptor = grpc.load("./config/rpc.proto");
-  // var lnrpc = lnrpcDescriptor.lnrpc;
-  // var lightning = new lnrpc.Lightning('dadserver:10009', credentials);
-  //
-  // lightning.GetInfo({}, function(err, response) {
-  // 	console.log('GetInfo:', err);
-  // });
-//}
 
 exports.channels = function(callback) {
 
