@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <title>Lightning Node Monitor</title>
+
+    <!-- Stylesheets -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/slate/bootstrap.min.css" rel="stylesheet" integrity="sha384-RpX8okQqCyUNG7PlOYNybyJXYTtGQH+7rIKiVvg1DLg6jahLEk47VvpUyS+E2/uJ" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="./node_modules/bootstrap-table/dist/bootstrap-table.css">
+    <link rel="stylesheet" href="./styles.css">
+
+    <!-- Scripts -->
+    <script>
+      delete module.exports
+    </script>
+    <script src="https://code.jquery.com/jquery-3.2.1.js"></script>
+    <script src='http://cdnjs.cloudflare.com/ajax/libs/bootstrap-validator/0.4.5/js/bootstrapvalidator.min.js'></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
+    <script src="./node_modules/bootstrap-table/dist/bootstrap-table.js"></script>
+    <script src="./window.js"></script>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header" nowrap>
+          <a class="navbar-brand" href="#">myLIGHTNING</a>
+        </div>
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="#">Home</a></li>
+          <li><a href="#">Transactions</a></li>
+          <li><a href="#">Settings</a></li>
+        </ul>
+      </div>
+    </nav>
+    <div id="container" class="container-fluid" ng-app="myApp" ng-controller="Main">
+      <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <div class="panel panel-default">
+            <div class="panel-heading"><b><h4>Wallet Information</h4></b></div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-sm-12">
+                  <blockquote>
+                    <ul class="list-inline compact">
+                      <li>
+                        <img src="icons/bitcoin.png" style="vertical-align:bottom;width: 50px; height: 50px;">
+                      </li>
+                      <!-- <li class="h4"><span class="label label-default mono">milliBTC:</span></li> -->
+                      <li class="h4">
+                        <b>Total</b> <span class="bg-primary h6">(mBTC)</span><br>
+                        <div id="btc-funds" style="margin-top:10px">N/A</div>
+                      </li>
+                    </ul>
+                    <ul class="list-inline compact">
+                      <li>
+                        <img src="icons/lightning.png" style="vertical-align:bottom;width: 50px; height: 50px;">
+                      </li>
+                      <li class="h4">
+                        <b>In Channel</b> <span class="bg-primary h6">(mBTC)</span><br>
+                        <div id="lnt-funds" style="margin-top:10px">N/A</div>
+                      </li>
+                    </ul>
+                  </blockquote>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-12">
+                  <strong>Node Id:</strong>
+                  <p id="address"/>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-2">
+                  <strong>Alias:</strong>
+                  <p id="alias"/>
+                </div>
+                <div class="col-sm-2">
+                  <strong>Port:</strong>
+                  <p id="port"/>
+                </div>
+                <div class="col-sm-4">
+                  <strong>Connection Code:</strong>
+                  <br/>
+                  <a href="#" id="pop">
+                    <img id="imageresource" src="serverqr.png" style="width: 40px; height: 40px;">
+                    Click to Enlarge
+                  </a>
+                </div>
+              </div>
+              <br>
+              <div class="btn-group">
+                <button id="send-payment" type="button" class="btn btn-info">Send Payment</button>
+                <button type="button" class="btn btn-warning" disabled>Recieve Payment</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <div class="panel panel-default">
+            <div class="panel-heading"><b><h4>Your Channels <button id="open-channel" type="button" class="btn btn-success btn-sm">Open New</button></h4></b></div>
+            <div class="panel-body">
+              <div ng-repeat="u in channels" class="panel panel-default shadow">
+                <div class="panel-body">
+                  <div class="row">
+                    <div class="col-lg-12">
+                      <strong>Remote Node ID:</strong>
+                      <p>{{u.node}}</p>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-lg-12">
+                      <div class="progress" style="height:10px">
+                        <div class="progress-bar progress-bar-success" role="progressbar" style="width: {{u.balance/u.capacity*100}}%" aria-valuenow="{{u.balance}}" aria-valuemin="0" aria-valuemax="{{u.capacity}}"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-2">
+                      <strong>Balance:</strong>
+                      <p>{{u.balance | number: 4}}</p>
+                    </div>
+                    <div class="col-sm-2">
+                      <strong>Limit:</strong>
+                      <p>{{u.capacity | number: 4}}</p>
+                    </div>
+                    <div class="col-sm-5">
+                      <strong>Status:</strong>
+                      <p>{{u.state}}</p>
+                    </div>
+                    <div class="col-sm-3 text-right">
+                      <a class="btn btn-danger ">Close</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- QR Code Modal -->
+    <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <h4 class="modal-title" id="modallabel">QR Address Viewer</h4>
+          </div>
+          <div class="modal-body" align="center">
+            <img src="" id="imagepreview" style="width: 300px; height: 300px;" >
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-success" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Send Payment Modal -->
+    <div class="modal fade" id="sendpaymentmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <form id="payment-form" class="container" action=" " method="post">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              <h4 class="modal-title" id="modallabel">Submit Payment</h4>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
+                  <div id="alert" class="alert alert-info">To submit your payment, please enter the invoice code provided by your vendor.</div>
+                  <div class="form-group has-feedback">
+                    <div class"form-control">
+                      <textarea rows="5" id="invoice" name="invoice" class="form-control" required></textarea>
+                    </div>
+                  </div>
+                  <div id="payment-validation-error" class="alert alert-danger" hidden>
+                    <h4>Network Error:</h4>
+                    <p id="payment-validation-text"</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <div class="btn-group">
+                <button id="send-invoice" class="btn btn-success">Submit</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <!-- New Channel Modal -->
+    <div class="modal fade" id="openchannelmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <form id="openchannel-form" class="container" action=" " method="post">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              <h4 class="modal-title" id="modallabel">Open New Channel</h4>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
+                  <div id="alert" class="alert alert-info">To open a new channel, specify the remote node id and amount to fund.</div>
+                  <div class="form-group has-feedback">
+                    <div class"form-control">
+                      <label for="node">Remote Node Id:</label>
+                      <textarea rows="2" id="remotenode" name="remotenode" class="form-control" required></textarea>
+                    </div>
+                  </div>
+                  <div class="form-group has-feedback">
+                    <div class"form-control">
+                      <label for="amount">Funding Amount</label>
+                      <input type="number" class="form-control" id="amount">
+                    </div>
+                  </div>
+                  <div id="channel-validation-error" class="alert alert-danger" hidden>
+                    <h4>Network Error:</h4>
+                    <p id="channel-validation-text"</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <div class="btn-group">
+                <button id="submit-channel" class="btn btn-success">Submit</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>
