@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>myLightning Wallet</title>
+
+  <!-- favicon -->
+  <link rel="icon" href="favicon.ico">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/slate/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/signalr.js/2.2.2/jquery.signalR.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.js"></script>
+  <script src="signalr/hubs"></script>
+  <script src="js/angular-1.6.7.min.js"></script>
+  <script src="js/jsqrcode-combined.min.js"></script>
+  <script src="js/html5-qrcode.min.js"></script>
+
+  <!-- Angular control -->
+  <script src="services/lightning.service.js"></script>
+  <script src="controllers/index.controller.js"></script>
+</head>
+
+<body>
+  <div id="container" ng-app="myLightning" ng-controller="Main as vm">
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header" nowrap>
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">myLIGHTNING</a>
+        </div>
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#">Transactions</a></li>
+            <li><a href="#">Settings</a></li>
+          </ul>
+          <!-- <ul class="nav navbar-nav navbar-right">
+            <li >
+              <a href="/auth/google" class="dropdown-toggle" data-toggle="dropdown">
+                <img ng-src="{{user.photos[0].value}}" class="img-circle special-img" style="vertical-align:center;width: 30px; height: 30px;"/>
+                <strong>Hi, {{user.displayName}}!</strong>
+              </a>
+            </li>
+          </ul> -->
+        </div>
+      </div>
+    </nav>
+    <div class="container-fluid">
+      <div id="transaction-box" class="alert alert-info error-container col-xs-5 col-sm-5 col-md-5 col-lg-5" style="right:20px;" hidden>
+        <button type="button" class="close" data-dismiss="alert">×</button>
+        <strong><b>Info!</b></strong> <span id="transaction-box-text"></span>
+      </div>
+      <div id="blockchain-notification" ng-show="!vm.info.result.synchronized" class="alert alert-warning">
+        <h4>Please wait while synchronizing to blockchain!</h4>
+        <ul class="list-inline compact">
+          <li class="h5">
+            <b>Current block height:</b><br>
+          </li>
+          <!-- <li class="h4"><span class="label label-default mono">milliBTC:</span></li> -->
+          <li class="h5">
+            <div id="blockchain-notification-text">{{vm.info.result.blockheight}}</div>
+          </li>
+        </ul>
+      </div>
+      <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <b><h4><img ng-src="{{vm.user.photos[0].value}}" class="img-circle special-img" style="border: 1px solid; -webkit-border-radius: 10px;-moz-border-radius: 10px;border-radius: 10px;top:-10px;width: 40px; height: 40px;"/>
+               {{vm.user.name.givenName}}'s Wallet<h4></b></div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-sm-12">
+                  <blockquote>
+                    <ul class="list-inline compact">
+                      <!-- <li class="h4"><span class="label label-default mono">milliBTC:</span></li> -->
+                      <li class="h4 mono text-right" style="width: 10em">
+                        <b>Available </b><span class="bg-primary h6">(mBTC)</span><br>
+                        <div id="btc-funds" style="margin-top:10px" class="text-right">{{vm.balances.btcfunds | number: 4}}</div>
+                      </li>
+                      <li>
+                        <img src="icons/bitcoin.png" style="vertical-align:bottom;width: 50px; height: 50px;">
+                      </li>
+                    </ul>
+                    <ul class="list-inline compact">
+                      <li class="h4 mono text-right"  style="width: 10em">
+                        <b>In Channel</b> <span class="bg-primary h6">(mBTC)</span><br>
+                        <div id="lnt-funds" style="margin-top:10px;" class="text-right">{{vm.balances.lntfunds | number: 4}}</div>
+                      </li>
+                      <li>
+                        <img src="icons/lightning.png" style="vertical-align:bottom;width: 50px; height: 50px;">
+                      </li>
+                    </ul>
+                  </blockquote>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                  <strong>Recieve Address:</strong>
+                  <p>{{vm.btcaddress}}</p>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                  <strong>Node Id:</strong>
+                  <p id="address">{{vm.info.result.nodeId}}</p>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xs-6 col-sm-2 col-md-2 col-lg-2">
+                  <strong>Alias:</strong>
+                  <p id="alias">{{vm.info.result.alias}}</p>
+                </div>
+                <div class="col-xs-6 col-sm-2 col-md-2 col-lg-2">
+                  <strong>Port:</strong>
+                  <p id="port">{{vm.info.result.port}}</p>
+                </div>
+                <div class="col-sm-4">
+                  <strong>Connection Code:</strong>
+                  <br/>
+                  <a href="#" id="pop">
+                    <img id="imageresource" src="img/serverqr.png" style="width: 40px; height: 40px;">
+                    Click to Enlarge
+                  </a>
+                </div>
+              </div>
+              <br>
+              <div class="row">
+                <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                  <div class="btn-group">
+                    <div class="btn-group">
+                      <div class="dropup" ng-show="vm.hasaliases">
+                        <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">Make Payment
+                          <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu"  ng-show="vm.hasaliases">
+                          <li class="dropdown-header">Quick Payment Options</li>
+                          <li ng-repeat="u in vm.quickpaynodes"><a style="cursor:pointer" ng-click="vm.aliasselected(u.pub_key)">{{u.alias}}</a></li>
+                          <li class="divider"></li>
+                          <li><a id="do-payment" <a style="cursor:pointer">Pay Invoice</a></li>
+                        </ul>
+                      </div>
+                    </div>
+                    <a id="do-payment2" type="button" class="btn btn-success" ng-show="!vm.hasaliases">Pay Invoice</a>
+                    <a id="create-invoice" type="button" class="btn btn-warning" data-target="#createinvoicemodal" data-toggle="modal" data-backdrop="static" data-keyboard="false">Create Invoice</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <ul class="list-inline">
+                <!-- <li class="h4"><span class="label label-default mono">milliBTC:</span></li> -->
+                <li class="h4">
+                  <b>Your Channels</b><br>
+                  <b class="h6">Viewing: ({{vm.selectedchannel.text}})</b>
+                </li>
+                <li>
+                  <div class="btn-group" style="vertical-align:bottom;">
+                    <button id="open-channel" type="button" class="btn btn-primary btn-sm" data-target="#openchannelmodal" data-toggle="modal" data-backdrop="static" data-keyboard="false">Open New</button>
+                    <div class="btn-group">
+                      <button class="btn btn-primary dropdown-toggle btn-sm" type="button" data-toggle="dropdown">Filter
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu">
+                        <li><a ng-click="vm.channelfilterselected('', 'All')">All</a></li>
+                        <li><a ng-click="vm.channelfilterselected('Open', 'Open')">Open</a></li>
+                        <li><a ng-click="vm.channelfilterselected('Pending', 'Pending')">Pending</a></li>
+                        <li><a ng-click="vm.channelfilterselected('Closing', 'Closing')">Closing</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="panel-body">
+              <div ng-repeat="u in vm.channels | filter: { state: vm.selectedchannel.filter }" class="panel panel-default shadow">
+                <div class="panel-body">
+                  <div class="row">
+                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                      <strong>Remote Node ID:</strong>
+                      <p>{{u.node}}<br/>
+                      <span class="label label-primary">{{u.alias}}</span></p>
+                    </div>
+                  </div>
+              <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                  <div class="progress" style="height:10px">
+                    <div class="progress-bar progress-bar-success" role="progressbar" style="width: {{u.balance/u.capacity*100}}%" aria-valuenow="{{u.balance}}" aria-valuemin="0" aria-valuemax="{{u.capacity}}"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xs-5 col-sm-2 col-md-2 col-lg-2">
+                  <strong>My Balance:</strong>
+                  <p>{{u.balance | number: 4}}</p>
+                </div>
+                <div class="col-xs-4 col-sm-2 col-md-2 col-lg-2">
+                  <strong>Limit:</strong>
+                  <p>{{u.capacity | number: 4}}</p>
+                </div>
+                <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+                  <strong>Status:</strong>
+                  <p>{{u.state}}</p>
+                </div>
+                <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 text-right">
+                  <div class="btn-group">
+                    <div class="btn btn-primary" ng-click="vm.close(u.channel)">Close</div>
+                    <div class="btn btn-primary" ng-click="vm.forceclose(u.channel)">Force Close</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- QR Code Modal -->
+  <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+          <h4 class="modal-title" id="modallabel">QR Address Viewer</h4>
+        </div>
+        <div class="modal-body" align="center">
+          <img src="" id="imagepreview" style="width: 300px; height: 300px;" >
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Send Payment Modal -->
+  <div class="modal fade" id="sendpaymentmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <form id="paymentform" name="paymentform" class="container" novalidate>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <h4 class="modal-title" id="modallabel">Submit Payment</h4>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
+                <div id="alert" class="alert alert-info">To submit your payment, please enter the routing number provided by your vendor.</div>
+                <div class="form-group has-feedback">
+                  <div class"form-control">
+                    <label for="invoice">Routing Number:</label>
+                    <div class="input-group input-group">
+                      <textarea rows="3" id="invoice" name="invoice" class="form-control" ng-model="vm.invoicecode" required></textarea>
+                      <div class="input-group-btn" style="vertical-align:bottom">
+                        <button style="height:100%" ng-click="vm.setcallbackcontrol('invoice');" data-target="#qrscannermodal" data-toggle="modal" data-backdrop="static" data-keyboard="false" class="btn btn-primary btn-lg" type="button"><div class=" glyphicon glyphicon-qrcode"/></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
+                <div class="form-group has-feedback" ng-show="paymentform.invoice.$modelValue.includes('@')">
+                  <div class"form-control">
+                    <label for="invoiceamount">Quick Pay Alias:</label>
+                    <input type="text" class="form-control" id="paymentalias" name="paymentalias"/>
+                    <span style="color:red;">Specify an alias for this recipient to help future Quick Pays.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="payment-validation-error" class="alert alert-danger" hidden>
+              <h4>Network Error:</h4>
+              <p id="payment-validation-text"</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div class="btn-group">
+              <button id="send-payment" class="btn btn-success">Send</button>
+              <button id="payment-cancel" type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+<!-- New Channel Modal -->
+<div class="modal fade" id="openchannelmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <form id="openchannel-form" class="container" action=" " method="post">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+          <h4 class="modal-title" id="modallabel">Open New Channel</h4>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
+              <div id="alert" class="alert alert-info">To open a new channel, specify the remote node id and amount to fund.</div>
+              <div class="form-group has-feedback">
+                <div class"form-control">
+                  <label for="node">Remote Node Id:</label>
+                  <textarea rows="2" id="remotenode" name="remotenode" class="form-control" required></textarea>
+                </div>
+              </div>
+              <div class="form-group has-feedback">
+                <div class"form-control">
+                  <label for="amount">Funding Amount</label>
+                  <input type="number" class="form-control" id="amount">
+                </div>
+              </div>
+              <div id="channel-validation-error" class="alert alert-danger" hidden>
+                <h4>Network Error:</h4>
+                <p id="channel-validation-text"</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div class="btn-group">
+              <div id="channel-loader" class="loader" hidden></div>
+            </div>
+            <div class="btn-group">
+              <button id="submit-channel" class="btn btn-success">Submit</button>
+              <button id="cancel-channel" type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <!-- Create Invoice Modal -->
+  <div class="modal fade" id="createinvoicemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <form id="createinvoiceform" name="createinvoiceform" class="container" novalidate>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <h4 class="modal-title" id="modallabel">Create New Invoice</h4>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
+                <div id="alert" class="alert alert-info">
+                  To create a new invoice enter an amount and optional memo. Enabling <strong>Quick Pay</strong> will allow customers to request automatic invoices from you in the future.
+                </div>
+                <div class="checkbox">
+                  <label>
+                    <input id="invoiceeasypay" type="checkbox" data-toggle="toggle">
+                    Enable Quick Pay
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
+                <div class="form-group has-feedback">
+                  <div class"form-control">
+                    <label for="invoiceamount">Amount:</label>
+                    <input type="number" class="form-control" ng-model="invoiceamount" id="invoiceamount" name="invoiceamount" min="0.001" required/>
+                    <span style="color:red;" ng-show="createinvoiceform.invoiceamount.$error.min||createinvoiceform.invoiceamount.$error.required ">Amount must be greater than 0.001</span>
+                  </div>
+                </div>
+                <div class="form-group has-feedback">
+                  <div class"form-control">
+                    <label for="invoicememo">Memo:</label>
+                    <input type="text" class="form-control"  id="invoicememo" name="invoicememo"/>
+                  </div>
+                </div>
+                <div id="invoice-validation-error" class="alert alert-danger" hidden>
+                  <h4>Network Error:</h4>
+                  <p id="invoice-validation-text"</p>
+                  </div>
+                </div>
+              </div>
+              <div class="row" align="center">
+                <img id="invoice-image" style="width: 300px; height: 300px;" hidden ><br>
+                <span id="invoice-code" class="mono" align="left" style="word-break:break-all" hidden></span>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <div class="btn-group">
+                <div id="invoice-loader" class="loader" hidden></div>
+              </div>
+              <div class="btn-group">
+                <button id="submit-invoice" type="button" ng-disabled=!createinvoiceform.$valid class="btn btn-success">Generate</button>
+                <button id="close-invoice" type="button" class="btn btn-warning" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <!-- Quick Pay Modal -->
+    <div class="modal fade" id="quickpaymodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <form name="quickpayform" class="container" novalidate>
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              <h4 class="modal-title" id="modallabel">Quickly Send Payment</h4>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
+                  <div id="alert" class="alert alert-info">
+                    To send a payment to <strong>{{vm.selectedalias.alias}}</strong> please enter an amount and optional memo.
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
+                  <div class="form-group has-feedback">
+                    <div class"form-control">
+                      <label for="quickpayamount">Amount:</label>
+                      <input type="number" class="form-control" name="amount" ng-model="vm.quickpay.amount" min="0.001" required/>
+                      <span style="color:red;" ng-show="quickpayform.amount.$error.min||quickpayform.amount.$error.required ">Amount must be greater than 0.001</span>
+                    </div>
+                  </div>
+                  <div class="form-group has-feedback">
+                    <div class"form-control">
+                      <label for="quickpaymemo">Memo:</label>
+                      <input type="text" class="form-control" name="memo" ng-init="vm.quickpay.memo=''" ng-model="vm.quickpay.memo"/>
+                    </div>
+                  </div>
+                  <div class="alert alert-danger" ng-show="vm.quickpay.haserror">
+                    <h4>Network Error:</h4>
+                    <p ng-model="vm.quickpay.error"/>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <div class="btn-group">
+                  <div ng-show="vm.quickpay.loading" class="loader"></div>
+                </div>
+                <div class="btn-group">
+                  <button type="button" ng-click="vm.sendquickpay()" ng-disabled="!quickpayform.$valid||vm.quickpay.loading" class="btn btn-success">Send</button>
+                  <button type="button" ng-disabled="vm.quickpay.loading" class="btn btn-warning" data-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- QR Scanner Modal -->
+    <div class="modal" id="qrscannermodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            <h4 class="modal-title" id="modallabel">QR Scanner</h4>
+          </div>
+          <div class="modal-body" align="center">
+            <div id="reader" align="center"  style="width:300px;height:300px">
+            </div>
+            <span id="result" class="mono" align="left" style="word-break:break-all" hidden></span>
+          </div>
+          <div class="modal-footer">
+            <button id="qr-scanner-close" type="button" class="btn btn-success" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

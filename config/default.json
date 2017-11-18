@@ -1,0 +1,8 @@
+{
+  "lightning-node": "lnd",
+  "webserver": "seregost.com",
+  "webport": 8443,
+  "rpcserver": "dadserver",
+  "netip": "dadserver",
+  "cert": "./certs/tls.cert"
+}
