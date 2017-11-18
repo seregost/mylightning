@@ -3,6 +3,7 @@ var app = window.angular.module('myLightning');
 app.controller('Main', ['$scope', '$http', 'lightningService', function($scope, $http, lightningService) {
   var vm = this;
   var connection = $.connection('/signalr');
+  $scope.showProperty = false;
 
   // Variables
   vm.user = {}
@@ -11,7 +12,7 @@ app.controller('Main', ['$scope', '$http', 'lightningService', function($scope, 
   vm.selectedalias = {};
   vm.hasaliases = false;
   vm.callbackcontrol = "";
-
+  vm.blockchainsynced = true;
   // Function binding
   vm.setcallbackcontrol = setcallbackcontrol;
   vm.channelfilterselected = channelfilterselected;
@@ -143,6 +144,7 @@ app.controller('Main', ['$scope', '$http', 'lightningService', function($scope, 
             if(value.node == keys[i]) {
                 value.alias = vm.quickpaynodes[keys[i]].alias
             }
+            $scope.showProperty = true;
           }
         });
       });
@@ -150,6 +152,7 @@ app.controller('Main', ['$scope', '$http', 'lightningService', function($scope, 
 
     lightningService.getInfo().then((response) => {
       vm.info = response.data;
+      vm.blockchainsynced = vm.info.result.synchronized;
     });
     lightningService.getBalances().then((response) => {
       vm.balances = response.data;

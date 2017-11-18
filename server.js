@@ -18,7 +18,7 @@ var usersById = {};
 var lightningnodes = {};
 
 // Read user store.
-fs.readFile('./config/users.json', 'utf8', function (err, data) {
+fs.readFile('./db/users.json', 'utf8', function (err, data) {
   if (err) throw err;
   usersById = JSON.parse(data);
   logger.info("Loading users.json.")
@@ -38,7 +38,7 @@ function addUser (userid, sourceUser) {
   var user;
   if(usersById[userid] == null) {
     user = usersById[userid] = {id: userid, displayName: sourceUser.displayName};
-    fs.writeFileSync('./config/users.json', JSON.stringify(usersById))
+    fs.writeFileSync('./db/users.json', JSON.stringify(usersById))
     logger.info(userid, "New user added to system.");
   }
   return usersById[userid];
