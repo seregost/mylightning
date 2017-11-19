@@ -13,12 +13,14 @@ app.controller('Main', ['$scope', '$http', 'lightningService', function($scope, 
   vm.hasaliases = false;
   vm.callbackcontrol = "";
   vm.blockchainsynced = true;
+
   // Function binding
   vm.setcallbackcontrol = setcallbackcontrol;
   vm.channelfilterselected = channelfilterselected;
   vm.showaliases =  vm.hasaliases;
   vm.aliasselected = aliasselected;
   vm.sendquickpay = sendquickpay;
+  vm.sendpayment = sendpayment;
   vm.close = close;
   vm.refresh = refresh;
 
@@ -61,7 +63,7 @@ app.controller('Main', ['$scope', '$http', 'lightningService', function($scope, 
       $("#v").remove();
       $("#qr-canvas").remove();
 
-      vm.invoicecode = $("#result").text();
+      vm.sendpayment.invoicecode = $("#result").text();
       $scope.$apply();
 
       $('#reader').html5_qrcode_stop();
@@ -109,6 +111,34 @@ app.controller('Main', ['$scope', '$http', 'lightningService', function($scope, 
         }
         vm.quickpay.loading = false;
       });
+    }
+  }
+
+  function sendpayment() {
+    var invoicecode = vm.sendpayment.invoicecode;
+    var alias = vm.sendpayment.alias;
+
+    if(invoicecode.length > 80) {
+      vm.sendpayment.loading=true;
+
+      lightningService.execSendInvoice(invoicecode, alias).then((response) => {
+        if(response.error == null) {
+          sendpaymentform.reset();
+          vm.sendpayment.haserror = false;
+          $('#sendpaymentmodal').modal('toggle');
+        }
+        else {
+            vm.sendpayment.haserror = true;
+            vm.sendpayment.error = response.error.message;
+            $scope.$apply();
+        }
+        vm.sendpayment.loading = false;
+      });
+    }
+    else {
+      // TODO: pay to bitcoin address
+      vm.sendpayment.haserror = true;
+      vm.sendpayment.error = "Invalid routing number.";
     }
   }
 
@@ -171,34 +201,6 @@ app.controller('Main', ['$scope', '$http', 'lightningService', function($scope, 
 
 
 $(() => {
-  $('#send-payment').bind("click",function(){
-
-    var invoiceid = $('#invoice').val();
-    var alias = $('#paymentalias').val();
-    if(invoiceid.length > 80)
-    {
-      console.log("Paying invoice");
-      $.post('/rest/v1/sendinvoice', {"invoiceid": invoiceid, "alias": alias}, (response) => {
-        if(response.error == null) {
-          $('#payment-form').trigger('reset');
-          $('#payment-validation-error').hide();
-          $('#sendpaymentmodal').modal('toggle');
-        }
-        else
-        {
-            $('#payment-validation-error').show();
-            $('#payment-validation-text').text(response.error.message);
-        }
-      });
-    }
-    else {
-      // TODO: pay to bitcoin address
-      $('#payment-validation-error').show();
-      $('#payment-validation-text').text("Invalid routing number.");
-    }
-    return false;
-  });
-
   $('#qrscannermodal').on('show.bs.modal', function (e) {
     $("#result").text("");
     $('#reader').html5_qrcode(function(data, stream) {

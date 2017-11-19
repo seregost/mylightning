@@ -6,6 +6,8 @@
     "bitcoin": "^3.0.1",
     "body-parser": "^1.18.2",
     "bootstrap-table": "^1.11.2",
+    "chai": "^4.1.2",
+    "chai-http": "^3.0.0",
     "coinkey": "^2.0.0",
     "config": "^1.28.1",
     "cookie-parser": "^1.4.3",
@@ -17,6 +19,7 @@
     "https": "^1.0.0",
     "lodash": "^4.17.4",
     "logform": "^1.2.1",
+    "mocha": "^4.0.1",
     "passport": "^0.4.0",
     "passport-google-oauth20": "^1.0.0",
     "qr-image": "^3.2.0",
@@ -24,9 +27,13 @@
     "secp256k1": "^3.3.1",
     "signalrjs": "^0.2.2",
     "sort-json-array": "^0.1.7",
+    "sprintf": "^0.1.5",
     "table-builder": "^2.1.1",
     "underscore": "^1.8.3",
     "winston": "^2.4.0"
+  },
+  "scripts": {
+    "test": "mocha --exit"
   },
   "devDependencies": {
     "electron-rebuild": "^1.6.0"

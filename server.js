@@ -11,7 +11,7 @@ const bodyParser = require('body-parser');
 const cookieParser  = require('cookie-parser');
 const lightningmodule = require("./lightning/"+config.get("lightning-node"));
 const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const googleStrategy = require('passport-google-oauth20').Strategy;
 const logger = require("./logger");
 
 var usersById = {};
@@ -44,7 +44,7 @@ function addUser (userid, sourceUser) {
   return usersById[userid];
 }
 
-passport.use(new GoogleStrategy({
+passport.use(new googleStrategy({
     clientID: "213521797972-ju341sr3bv6pbhic0o5jnv0l057m6qca.apps.googleusercontent.com",
     clientSecret: "HVYh7jbZEQBr0asBsrRZ2HOG",
     callbackURL: "https://seregost.com:8443/auth/google/callback"
@@ -123,7 +123,7 @@ app.post('/rest/v1/requestinvoice', function (req, res) {
     res.sendStatus(404);
   }
   else {
-    lightningnode.createinvoice(memo, amount, (response) => {
+    lightningnode.createinvoice(memo, amount, false, (response) => {
       logger.verbose(userid, "/rest/v1/requestinvoice succeeded.")
       logger.debug(userid, JSON.stringify(response));
       res.send(response);
@@ -202,7 +202,7 @@ app.post('/rest/v1/createinvoice', function (req, res) {
     var memo = req.body.memo;
     var amount = req.body.amount;
 
-    lightningnodes[userid].createinvoice(memo, amount, (response) => {
+    lightningnodes[userid].createinvoice(memo, amount, false, (response) => {
       logger.verbose(userid, "/rest/v1/createinvoice succeeded.")
       logger.debug(userid, "Response:" + JSON.stringify(response));
       res.send(response);

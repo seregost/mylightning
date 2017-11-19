@@ -255,7 +255,7 @@
 
   <!-- Send Payment Modal -->
   <div class="modal fade" id="sendpaymentmodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <form id="paymentform" name="paymentform" class="container" novalidate>
+    <form id="sendpaymentform" name="sendpaymentform" class="container" novalidate>
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -270,33 +270,37 @@
                   <div class"form-control">
                     <label for="invoice">Routing Number:</label>
                     <div class="input-group input-group">
-                      <textarea rows="3" id="invoice" name="invoice" class="form-control" ng-model="vm.invoicecode" required></textarea>
+                      <textarea rows="3" id="invoicecode" name="invoicecode" class="form-control" ng-model="vm.sendpayment.invoicecode" minlength="80" required></textarea>
                       <div class="input-group-btn" style="vertical-align:bottom">
                         <button style="height:100%" ng-click="vm.setcallbackcontrol('invoice');" data-target="#qrscannermodal" data-toggle="modal" data-backdrop="static" data-keyboard="false" class="btn btn-primary btn-lg" type="button"><div class=" glyphicon glyphicon-qrcode"/></button>
                       </div>
                     </div>
+                    <span style="color:red;" ng-show="sendpaymentform.invoicecode.$error.minlength">Minimum length of routing number is 80.</span>
                   </div>
                 </div>
               </div>
               <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
-                <div class="form-group has-feedback" ng-show="paymentform.invoice.$modelValue.includes('@')">
+                <div class="form-group has-feedback" ng-show="sendpaymentform.invoicecode.$modelValue.includes('@')">
                   <div class"form-control">
                     <label for="invoiceamount">Quick Pay Alias:</label>
-                    <input type="text" class="form-control" id="paymentalias" name="paymentalias"/>
-                    <span style="color:red;">Specify an alias for this recipient to help future Quick Pays.</span>
+                    <input type="text" class="form-control" id="alias" name="alias" ng-model="vm.sendpayment.alias" ng-required="sendpaymentform.invoicecode.$modelValue.includes('@')"/>
+                    <span style="color:red;" ng-show="sendpaymentform.alias.$error.min||sendpaymentform.alias.$error.required">Specify an alias for this recipient to help future Quick Pays.</span>
                   </div>
                 </div>
               </div>
             </div>
-            <div id="payment-validation-error" class="alert alert-danger" hidden>
+            <div class="alert alert-danger" ng-show="vm.sendpayment.haserror">
               <h4>Network Error:</h4>
-              <p id="payment-validation-text"</p>
+              <p>{{vm.sendpayment.error}}</p>
             </div>
           </div>
           <div class="modal-footer">
             <div class="btn-group">
-              <button id="send-payment" class="btn btn-success">Send</button>
-              <button id="payment-cancel" type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+              <div ng-show="vm.sendpayment.loading" class="loader"></div>
+            </div>
+            <div class="btn-group">
+              <button type="button" ng-disabled="!sendpaymentform.$valid||vm.sendpayment.loading" ng-click="vm.sendpayment()"  class="btn btn-success" >Send</button>
+              <button type="button" ng-disabled="vm.sendpayment.loading" class="btn btn-warning" data-dismiss="modal">Close</button>
             </div>
           </div>
         </div>

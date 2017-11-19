@@ -9,6 +9,7 @@ const qr = require('qr-image');
 const fs = require('fs');
 const sortJsonArray = require('sort-json-array');
 const logger = require("../logger");
+const grpc = require('grpc');
 
 // sudo sysctl -w net.ipv4.conf.p4p1.route_localnet=1
 // sudo iptables -t nat -I PREROUTING -p tcp -d 192.168.2.0/24 --dport 10001 -j DNAT --to-destination 127.0.0.1:10001
@@ -17,7 +18,7 @@ module.exports = class Lighting {
   constructor(id, rpcport, peerport) {
     this._userid = id;
     this._hasupdate = false;
-    this._lightning = this.getConnection(rpcport);
+    this._lightning = this._getConnection(rpcport);
     this._newtransactions = [];
     this._peerport = peerport;
     this._quickpaynodes = {};
@@ -63,22 +64,9 @@ module.exports = class Lighting {
     });
   }
 
-  getConnection(port)
+  close()
   {
-    var grpc = require('grpc');
-    var fs = require("fs");
-
-    var lndCert = fs.readFileSync(config.get("cert"));
-    var credentials = grpc.credentials.createSsl(lndCert);
-    var { lnrpc } = grpc.load("./config/rpc.proto");
-    var lightning = new lnrpc.Lightning(config.get("rpcserver")+":"+port, credentials);
-
-    // TODO: add macaroon support.
-    // let metadata = new grpc.Metadata();
-    // var macaroonHex = fs.readFileSync(config.get("macaroon")).toString("hex");
-    // metadata.add('macaroon', macaroonHex);
-
-    return lightning;
+    grpc.closeClient(this._lightning);
   }
 
   refreshChannels() {
@@ -294,16 +282,18 @@ module.exports = class Lighting {
 
   sendinvoice(invoiceid, alias, callback) {
     var nodepath = invoiceid.split("@");
-    if(nodepath.length > 1) {
-      invoiceid = nodepath[0];
+    var pay_req = nodepath[0];
+    var error = false;
 
-      this._lightning.decodePayReq({"pay_req": invoiceid}, (err, response) => {
+    if(nodepath.length > 1) {
+      this._lightning.decodePayReq({"pay_req": pay_req}, (err, response) => {
         if(err != null) {
           logger.error(this._userid, "lnd.decodePayReq failed: " + JSON.stringify(err));
           callback({"error":{"message":err.message}});
+          error = true;
           return;
         }
-        if(this._quickpaynodes[response.destination] == null && alias != null) {
+        if(alias != null) {
           this._quickpaynodes[response.destination] = {"alias": alias, "server": nodepath[1]};
           var dir = './db/'+this._userid+'/';
           fs.writeFileSync(dir+'quickpaynodes.json', JSON.stringify(this._quickpaynodes));
@@ -311,16 +301,18 @@ module.exports = class Lighting {
         }
       });
     }
-    var call = this._lightning.SendPaymentSync({"payment_request": invoiceid}, (err, response) => {
-      if(err != null) {
-        logger.error(this._userid, "lnd.sendinvoice failed: " + JSON.stringify(err));
-        callback({"error":{"message":err.message}});
-        return;
-      }
-      logger.debug(this._userid, "lnd.sendinvoice succeeded.");
-      this.refreshChannels();
-      callback(response);
-    });
+    if(!error) {
+      var call = this._lightning.SendPaymentSync({"payment_request": pay_req}, (err, response) => {
+        if(err != null) {
+          logger.error(this._userid, "lnd.sendinvoice failed: " + JSON.stringify(err));
+          callback({"error":{"message":err.message}});
+          return;
+        }
+        logger.debug(this._userid, "lnd.sendinvoice succeeded.");
+        this.refreshChannels();
+        callback(response);
+      });
+    }
   }
 
   quickpay(pub_key, amount, memo, callback) {
@@ -352,7 +344,7 @@ module.exports = class Lighting {
     }
   }
 
-  createinvoice(memo, amount, callback) {
+  createinvoice(memo, amount, quickpay, callback) {
     this._lightning.AddInvoice({"memo": memo, "value": (amount*100000)}, (err, response) => {
       if(err != null) {
         logger.error(this._userid, "lnd.createinvoice failed: " + JSON.stringify(err));
@@ -365,9 +357,13 @@ module.exports = class Lighting {
         var qr_svg = qr.image(""+response.payment_request, {type: 'png'});
         qr_svg.pipe(require('fs').createWriteStream(dir + "latestinvoice.png"));
 
-        var qr_svg = qr.image(""+response.payment_request+"@"+config.get("webserver")+":"+config.get("webport"), {type: 'png'});
+        var quickpay_request = ""+response.payment_request+"@"+config.get("webserver")+":"+config.get("webport");
+        var qr_svg = qr.image(quickpay_request, {type: 'png'});
         qr_svg.pipe(require('fs').createWriteStream(dir + "latestinvoice_easy.png"));
 
+        if(quickpay == true) {
+          response.payment_request = quickpay_request;
+        }
         logger.debug(this._userid, "lnd.createinvoice succeeded.");
         callback(response);
       }
@@ -417,10 +413,26 @@ module.exports = class Lighting {
   }
 
   // PRIVATE METHODS
+  _getConnection(port)
+  {
+    var fs = require("fs");
+
+    var lndCert = fs.readFileSync(config.get("cert"));
+    var credentials = grpc.credentials.createSsl(lndCert);
+    var { lnrpc } = grpc.load("./config/rpc.proto");
+    var lightning = new lnrpc.Lightning(config.get("rpcserver")+":"+port, credentials);
+
+    // TODO: add macaroon support.
+    // let metadata = new grpc.Metadata();
+    // var macaroonHex = fs.readFileSync(config.get("macaroon")).toString("hex");
+    // metadata.add('macaroon', macaroonHex);
+
+    return lightning;
+  }
+
   _opennewpeer(pubkey, host, amount, callback) {
     this._lightning.ConnectPeer({"addr": {"pubkey": pubkey, "host": host}}, (err, response) => {
-      if(err != null)
-      {
+      if(err != null) {
         callback({"error":{"message":err}});
       }
       else

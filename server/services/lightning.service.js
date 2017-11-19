@@ -29,6 +29,6 @@ angular.module('myLightning',[])
     };
 
     this.execSendInvoice = function(invoiceid, alias) {
-      return $http.post('/rest/v1/sendinvoide', {"invoiceid": invoiceid, "alias": alias});
+      return $http.post('/rest/v1/sendinvoice', {"invoiceid": invoiceid, "alias": alias});
     };
 }]);
