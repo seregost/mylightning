@@ -17,15 +17,16 @@
     "express-session": "^1.15.6",
     "grpc": "^1.7.1",
     "https": "^1.0.0",
+    "jsdom": "^11.3.0",
     "lodash": "^4.17.4",
     "logform": "^1.2.1",
-    "mocha": "^4.0.1",
     "passport": "^0.4.0",
     "passport-google-oauth20": "^1.0.0",
     "qr-image": "^3.2.0",
     "request": "^2.83.0",
     "secp256k1": "^3.3.1",
     "signalrjs": "^0.2.2",
+    "sinon": "^4.1.2",
     "sort-json-array": "^0.1.7",
     "sprintf": "^0.1.5",
     "table-builder": "^2.1.1",
@@ -33,9 +34,17 @@
     "winston": "^2.4.0"
   },
   "scripts": {
-    "test": "mocha --exit"
+    "test": "karma start karma.conf.js"
   },
   "devDependencies": {
-    "electron-rebuild": "^1.6.0"
+    "angular": "^1.6.6",
+    "angular-mocks": "^1.6.6",
+    "electron-rebuild": "^1.6.0",
+    "jasmine": "^2.8.0",
+    "karma": "^1.7.1",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-ie-launcher": "^1.0.0",
+    "karma-jasmine": "^1.1.0",
+    "mocha": "^4.0.1"
   }
 }

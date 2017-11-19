@@ -74,5 +74,11 @@ describe('lnd', function() {
   it('should have new transactions', () => {
     expect(lightning0.newtransactions().length > 0).to.eql(true);
   });
+  it('should list transactions', (done) => {
+    lightning0.gettransactions((result) => {
+      expect(result.error).to.be.a('undefined');
+      done();
+    });
+  });
   // TODO: figure out how to deal with channel open & close testing.
 });

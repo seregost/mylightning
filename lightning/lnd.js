@@ -202,6 +202,29 @@ module.exports = class Lighting {
     });
   }
 
+  gettransactions(callback) {
+    this._lightning.getTransactions({}, (err, response) => {
+      if(err != null) {
+        logger.error(this._userid, "lnd.gettransactions failed: " + JSON.stringify(err));
+        callback({"error":{"message":err}});
+        return;
+      }
+      var transactions = [];
+      response.transactions.forEach((value) => {
+        transactions.push(
+        {
+          "hash": value.tx_hash,
+          "amount": value.amount/100000,
+          "num_confirmations": value.num_confirmations,
+          "time_stamp": value.time_stamp,
+          "total_fees": value.total_fees
+        });
+      });
+      logger.verbose(this._userid, "lnd.gettransactions succeeded.");
+      callback(transactions);
+    });
+  }
+
   channels(callback) {
     var channels = [];
     this._lightning.ListChannels({}, (err, response) => {
