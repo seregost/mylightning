@@ -7,12 +7,13 @@
     var connection = $.connection('/signalr');
 
     // Variables
-    vm.selectedchannel = {"filter": "Open", "text": "Open"};
+    vm.selectedchannel = {"filter": "", "text": "All"};
     vm.selectedalias = {};
     vm.hasaliases = false;
     vm.blockchainsynced = true;
     vm.isloaded = false;
     vm.serverdisconnected = false;
+    vm.alerttext = "";
 
     // Function binding
     vm.refresh = refresh;
@@ -27,21 +28,28 @@
 
     vm.refresh();
 
-    // SignalR binding.
+    /**
+    * SignalR receive message loop.
+    * @param {json} data - contains type of update and any paramaters
+    */
     connection.received(function (data) {
       if(data.method == "refresh") {
         console.log("Refreshing account.");
         vm.refresh();
       }
-      if(data.method == "newtransactions") {
+      else if(data.method == "newtransactions") {
         console.log("new payment received");
-        $("#transaction-box-text").text("New invoice received for \""+data.params[0].memo+"\" in the amount of "+data.params[0].value.toFixed(4))
-        $("#transaction-box").fadeIn().delay(5000).fadeOut("slow");
+
+        var memo = " ";
+        if(data.params[0].memo.length > 0)
+          memo = " for \""+data.params[0].memo + "\" ";
+
+        _displayalert("You recieved a payment" + memo + "in the amount of "+data.params[0].value.toFixed(4));
 
         // Wait a little bit to allow payments to settle.  Then refresh our data.
+        setInterval(() => {vm.refresh()}, 2000);
 
-        setInterval(() => {vm.refresh()}, 5000);
-        // Check if we've recieved payment for an open invoice.
+        // TODO: Close payment panel.
         data.params.forEach((value) => {
           if(value.payment_request == $('#invoice-code').text()) {
             // If the payment has been recieved, force the modal to close.
@@ -49,11 +57,9 @@
           }
         });
       }
-      if(data.method == "newchannels") {
-        console.log("new payment received");
-        $("#transaction-box-text").text("A new channel has been opened with the capacity of "+data.params[0].capacity.toFixed(4))
-        $("#transaction-box").fadeIn().delay(5000).fadeOut("slow");
-        vm.refresh();
+      else if(data.method == "newchannels") {
+        _displayalert("A new channel has been opened with the capacity of "+data.params[0].capacity.toFixed(4));
+        setInterval(() => {vm.refresh()}, 2000);
       }
     });
 
@@ -96,6 +102,11 @@
           modal.element.modal();
           modal.close.then(function(result) {
             vm.quickpay = result;
+            if(vm.quickpay.success == true)
+            {
+              _displayalert("You sent a quickpay in the amount of: "+vm.quickpay.amount.toFixed(4))
+              vm.refresh();
+            }
         });
       });
     }
@@ -198,6 +209,12 @@
 
         vm.isloaded = true;
       });
+    }
+
+    function _displayalert(message, time)
+    {
+      vm.alerttext = message;
+      $("#alertbox").fadeIn().delay(5000).fadeOut("slow");
     }
 
     $("#pop").on("click", function() {

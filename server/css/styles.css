@@ -11,6 +11,9 @@
 .mono {
   font-family: Consolas, Lucida Console, monospace;
 }
+.uppercase {
+  text-transform: uppercase;
+}
 .compact > li {
   margin-top: 5px;
   margin-bottom: 5px;
@@ -28,6 +31,8 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+body { padding-right: 0 !important }
 
 .error-container {
   position:fixed;

@@ -14,6 +14,7 @@
         lightningService.execQuickPay(dest, amount, memo).then((response) => {
           if(response.data.error == null) {
             $scope.quickpay.haserror = false;
+            $scope.quickpay.success = true;
 
             closemodal();
             close($scope.quickpay, 500);
@@ -36,7 +37,7 @@
 
       // Hack to eliminate backdrop remaining bug.
       var backdrop = $(".modal-backdrop");
-      if(backdrop != null) backdrop.fadeOut('fast');
+      if(backdrop != null) backdrop.remove();
     }
   }]);
 })();

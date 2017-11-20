@@ -1,7 +1,23 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('OpenChannelController', ['$scope', '$element', 'lightningService', 'close', function($scope, $element, lightningService, close) {
+  .controller('OpenChannelController', ['$scope', '$element', 'ModalService', 'lightningService', 'close', function($scope, $element, ModalService, lightningService, close) {
+    $scope.openchannel = {};
+    $scope.doqrscanner = () => {
+      // angular.element('#quickpaymodal').modal('show');
+      ModalService.showModal({
+        templateUrl: "modals/qrscanner.html",
+        controller: "QRScannerController",
+      }).then(function(modal) {
+          // The modal object has the element built, if this is a bootstrap modal
+          // you can call 'modal' to show it, if it's a custom modal just show or hide
+          // it as you need to.
+          modal.element.modal();
+          modal.close.then(function(result) {
+            $scope.openchannel.remotenode = result;
+        });
+      });
+    }
     $scope.openchannel = () => {
       var remotenode = $scope.openchannel.remotenode;
       var amount = $scope.openchannel.amount;
@@ -34,7 +50,7 @@
 
       // Hack to eliminate backdrop remaining bug.
       var backdrop = $(".modal-backdrop");
-      if(backdrop != null) backdrop.fadeOut('fast');
+      if(backdrop != null) backdrop.remove();
     }
   }]);
 })();

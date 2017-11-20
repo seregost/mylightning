@@ -54,8 +54,9 @@
       $element.modal('hide');
 
       // Hack to eliminate backdrop remaining bug.
+      $('body').removeClass('modal-open');
       var backdrop = $(".modal-backdrop");
-      if(backdrop != null) backdrop.fadeOut('fast');
+      if(backdrop != null) backdrop.remove();
     }
   }]);
 })();
