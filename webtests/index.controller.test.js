@@ -86,7 +86,7 @@ describe('index.controller', function () {
 
   beforeEach(angular.mock.module('mock.services'));
 
-  beforeEach(inject(function(_$controller_, _$rootScope_, _$httpBackend_, _lightningService_) {
+  beforeEach(inject(function(_$controller_, _$rootScope_, _$httpBackend_, _lightningService_, _ModalService_) {
     httpBackend = _$httpBackend_
     httpBackend.when('GET', 'http://localhost:9876/signalr/negotiate')
       .respond({userId: 'userX'}, {'A-Token': 'xxx'});
@@ -94,11 +94,13 @@ describe('index.controller', function () {
     // Disable signalr
     spyOn($.connection('/signalr'), 'start').and.returnValue(null);
     spy = spyOn(angular, 'element').and.callFake(ngElementFake);
+
     if(ctrl == null)
     {
       ctrl = _$controller_('MainController', {
         $scope: scope,
-        lightningService: _lightningService_
+        lightningService: _lightningService_,
+        Modalservice: _ModalService_
       });
     }
   }));
@@ -113,25 +115,15 @@ describe('index.controller', function () {
     ctrl.refresh();
     expect(ctrl).toBeDefined();
   });
-  it('should setcallbackcontrol', function() {
-    ctrl.setcallbackcontrol("invoicecode");
-    expect(ctrl.callbackcontrol).toBe("invoicecode");
-  });
-  it('should hide qr scanner model', function() {
-    // TODO
-  });
+
   it('should support channelfilterselected', function() {
     ctrl.channelfilterselected("Open", "Open");
     expect(ctrl.selectedchannel.filter).toBe("Open");
     expect(ctrl.selectedchannel.text).toBe("Open");
   });
-  it('should support aliasselected', function() {
-    ctrl.aliasselected("039a013d24c9ae30475fb79abfc3fb41e85d20441336c6cfc45bff491d1517db9b");
+
+  it('should support doquickpay', function() {
+    ctrl.doquickpay("039a013d24c9ae30475fb79abfc3fb41e85d20441336c6cfc45bff491d1517db9b");
     expect(ctrl.selectedalias.alias).toBe("The Bank");
-  });
-  it('should allow sendquickpay', function() {
-    ctrl.quickpay = {"memo": "", "amount": 1}
-    ctrl.sendquickpay();
-    expect(ctrl.quickpay.haserror).toBe(false);
   });
 });

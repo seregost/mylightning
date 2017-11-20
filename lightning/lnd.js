@@ -20,6 +20,7 @@ module.exports = class Lighting {
     this._hasupdate = false;
     this._lightning = this._getConnection(rpcport);
     this._newtransactions = [];
+    this._newchannels = [];
     this._peerport = peerport;
     this._quickpaynodes = {};
 
@@ -41,8 +42,8 @@ module.exports = class Lighting {
     setInterval(() => {this.refreshChannels();}, 10000);
 
     // Subscribe to invoices.
-    var call = this._lightning.subscribeInvoices({});
-    call.on('data', (message) => {
+    var invoices = this._lightning.subscribeInvoices({});
+    invoices.on('data', (message) => {
       this._newtransactions.push(
       {
         "type": "Invoice",
@@ -54,11 +55,42 @@ module.exports = class Lighting {
       logger.debug(JSON.stringify(message));
       this.refreshChannels();
     });
-    call.on('end', function() {
+    invoices.on('end', function() {
       // The server has finished sending
       console.log("END");
     });
-    call.on('status', function(status) {
+    invoices.on('status', function(status) {
+      // Process status
+      console.log("Current status: " + status);
+    });
+
+    // Subscribe to invoices.
+    var channels = this._lightning.subscribeChannelGraph({});
+    channels.on('data', (message) => {
+      var shouldrefresh = false;
+      message.channel_updates.forEach((value) => {
+        // If we are the recipient of the new channel.
+        if(value.advertising_node == this._pubkey) {
+          this._newchannels.push(
+          {
+            "channelid": value.chan_id,
+            "channelpoint": value.chan_point,
+            "capacity": parseInt(value.capacity)/100000,
+            "remotenode": value.connecting_node
+          });
+          shouldrefresh = true;
+          logger.info(this._userid, "Detected a new channel opening.")
+          logger.debug(this._userid, "Response: ", JSON.stringify(value));
+        }
+      });
+      if(shouldrefresh == true)
+        this.refreshChannels();
+    });
+    channels.on('end', function() {
+      // The server has finished sending
+      console.log("END");
+    });
+    channels.on('status', function(status) {
       // Process status
       console.log("Current status: " + status);
     });
@@ -135,6 +167,16 @@ module.exports = class Lighting {
     {
       var temp = this._newtransactions;
       this._newtransactions = []
+      return temp;
+    }
+    return [];
+  }
+
+  newchannels() {
+    if(this._newchannels.length > 0)
+    {
+      var temp = this._newchannels;
+      this._newchannels = []
       return temp;
     }
     return [];
@@ -295,46 +337,52 @@ module.exports = class Lighting {
       if(err != null) {
         logger.error(this._userid, "lnd.sendpayment failed: " + JSON.stringify(err));
         callback({"error":{"message":err}});
-        return;
       }
-      else
+      else {
         logger.debug(this._userid, "lnd.sendpayment succeeded.");
         callback(response);
+      }
     });
   }
 
   sendinvoice(invoiceid, alias, callback) {
     var nodepath = invoiceid.split("@");
     var pay_req = nodepath[0];
-    var error = false;
 
+    var dopayment = () => {
+      this._lightning.SendPaymentSync({"payment_request": pay_req}, (err, response) => {
+        if(err != null) {
+          logger.error(this._userid, "lnd.sendinvoice failed: " + JSON.stringify(err));
+          callback({"error":{"message":err.message}});
+        }
+        else if(response.payment_error != null && response.payment_error.length > 0) {
+          logger.error(this._userid, "lnd.sendinvoice failed: " + JSON.stringify(response));
+          callback({"error":{"message":response.payment_error}});
+        }
+        else {
+          logger.debug(this._userid, "lnd.sendinvoice succeeded.");
+          this.refreshChannels();
+          callback(response);
+        }
+      });
+    }
     if(nodepath.length > 1) {
       this._lightning.decodePayReq({"pay_req": pay_req}, (err, response) => {
         if(err != null) {
           logger.error(this._userid, "lnd.decodePayReq failed: " + JSON.stringify(err));
           callback({"error":{"message":err.message}});
-          error = true;
-          return;
         }
         if(alias != null) {
           this._quickpaynodes[response.destination] = {"alias": alias, "server": nodepath[1]};
           var dir = './db/'+this._userid+'/';
           fs.writeFileSync(dir+'quickpaynodes.json', JSON.stringify(this._quickpaynodes));
           logger.verbose(this._userid, "lnd.sendinvoice added new quickpaynode for pub_key: " + response.destination);
+          dopayment();
         }
       });
     }
-    if(!error) {
-      var call = this._lightning.SendPaymentSync({"payment_request": pay_req}, (err, response) => {
-        if(err != null) {
-          logger.error(this._userid, "lnd.sendinvoice failed: " + JSON.stringify(err));
-          callback({"error":{"message":err.message}});
-          return;
-        }
-        logger.debug(this._userid, "lnd.sendinvoice succeeded.");
-        this.refreshChannels();
-        callback(response);
-      });
+    else {
+      dopayment();
     }
   }
 
@@ -361,8 +409,15 @@ module.exports = class Lighting {
             logger.error(this._userid, "lnd.quickpay requestinvoice failed with response: " + error.message);
             callback({"error":{"message":error.message}});
           }
-          logger.debug(this._userid, "lnd.quickpay succeeded.");
-          this.sendinvoice(body.payment_request, "", callback);
+          else if(body.error != null)
+          {
+            logger.error(this._userid, "lnd.quickpay requestinvoice failed with response: " + body.error.message);
+            callback({"error":{"message":body.error.message}});
+          }
+          else {
+            logger.debug(this._userid, "lnd.quickpay succeeded.");
+            this.sendinvoice(body.payment_request, "", callback);
+          }
       });
     }
   }
@@ -398,41 +453,61 @@ module.exports = class Lighting {
 
     // List peers
     this._lightning.listPeers({}, (err, response) => {
-      var peerid = -1;
-      response.peers.forEach((value) => {
-        if(value.pub_key == nodepath[0]) {
-          peerid = value.peer_id;
-          return false;
-        }
-      });
-
-      if(peerid == -1) {
-        this._opennewpeer(nodepath[0],nodepath[1],(amount*100000),callback)
+      if(err != null) {
+        logger.error(this._userid, "lnd.openchannel failed on listPeers: " + JSON.stringify(err));
+        callback({"error":{"message":err.message}});
       }
       else {
-        this._opennewchannel(peerid, nodepath[0], (amount*100000),callback)
+        var peerid = -1;
+        response.peers.forEach((value) => {
+          if(value.pub_key == nodepath[0]) {
+            peerid = value.peer_id;
+            return false;
+          }
+        });
+
+        if(peerid == -1) {
+          if(nodepath.length < 2)
+          {
+            logger.error(this._userid, "lnd.openchannel failed.  No peer found, so must specify a host name.");
+            callback({"error":{"message":"No peer found, so must specify a host name."}});
+          }
+          else
+            this._opennewpeer(nodepath[0],nodepath[1],(amount*100000),callback)
+        }
+        else {
+          this._opennewchannel(peerid, nodepath[0], (amount*100000),callback)
+        }
       }
     })
   }
 
   closechannel(channelid, callback)
   {
-    this._lightning.GetChanInfo({"chan_id": channelid}, (err,response) => {
-      var channel_point = response.chan_point.split(':');
-      var call = this._lightning.CloseChannel(
-        {
-          "channel_point":
+    try {
+      this._lightning.GetChanInfo({"chan_id": channelid}, (err,response) => {
+        logger.debug(this._userid, "Channel point to close: ", response.chan_point);
+
+        var channel_point = response.chan_point.split(':');
+
+        var call = this._lightning.CloseChannel(
           {
-            "funding_txid": ByteBuffer.fromHex(channel_point[0]),
-            "output_index": parseInt(channel_point[1])
-          }
+            "channel_point":
+            {
+              "funding_txid": ByteBuffer.fromHex(channel_point[0]).reverse(),
+              "output_index": parseInt(channel_point[1])
+            }
+          });
+
+        call.on('data', function(message) {
+          logger.info(this._userid, "lnd.closechannel succeeded.  Channel closed.");
         });
-
-      call.on('data', function(message) {
-        callback(message);
       });
-    });
-
+      callback({});
+    }
+    catch(e) {
+      logger.error(this._userid, "lnd.closechannel failed.  Error code:" + e);
+    }
   }
 
   // PRIVATE METHODS
@@ -456,6 +531,7 @@ module.exports = class Lighting {
   _opennewpeer(pubkey, host, amount, callback) {
     this._lightning.ConnectPeer({"addr": {"pubkey": pubkey, "host": host}}, (err, response) => {
       if(err != null) {
+        logger.error(this._userid, "lnd._opennewpeer failed: " + JSON.stringify(err));
         callback({"error":{"message":err}});
       }
       else
@@ -475,9 +551,11 @@ module.exports = class Lighting {
       }, (err, response) => {
         if(err != null)
         {
+          logger.error(this._userid, "lnd._opennewchannel failed: " + JSON.stringify(err));
           callback({"error":{"message":err}});
         }
         else {
+          this.refreshChannels();
           callback({response});
         }
     });

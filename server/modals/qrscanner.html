@@ -1,0 +1,19 @@
+<!-- QR Scanner Modal -->
+<div class="modal" id="qrscannermodal" tabindex="-1" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" ng-click="close()" class="close" ><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="modallabel">QR Scanner</h4>
+      </div>
+      <div class="modal-body" align="center">
+        <div id="qrreader" name="qrreader" align="center" style="width:300px;height:300px">
+        </div>
+        <span id="result" ng-modal="result" class="mono" align="left" style="word-break:break-all" hidden></span>
+      </div>
+      <div class="modal-footer">
+        <button ng-click="close()" type="button" class="btn btn-success" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

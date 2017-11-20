@@ -1,0 +1,53 @@
+<!-- Quick Pay Modal -->
+<div class="modal fade" id="quickpaymodal" data-backdrop="static" data-keyboard="false">
+  <form name="quickpayform" class="container" novalidate>
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" ng-click="close()" class="close" ><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+          <h4 class="modal-title" id="modallabel">Quickly Send a Payment</h4>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
+              <div id="alert" class="alert alert-info">
+                To send a payment to <strong>{{selectedalias.alias}}</strong> please enter an amount and optional memo.
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
+              <div class="form-group has-feedback">
+                <div class"form-control">
+                  <label for="quickpayamount">Amount:</label>
+                  <input type="number" class="form-control" name="amount" ng-model="quickpay.amount" min="0.001" required/>
+                  <span style="color:red;" ng-show="quickpayform.amount.$error.min||quickpayform.amount.$error.required ">Amount must be greater than 0.001</span>
+                </div>
+              </div>
+              <div class="form-group has-feedback">
+                <div class"form-control">
+                  <label for="quickpaymemo">Memo:</label>
+                  <input type="text" class="form-control" name="memo" ng-init="quickpay.memo=''" ng-model="quickpay.memo"/>
+                </div>
+              </div>
+              <div class="alert alert-danger" ng-show="quickpay.haserror">
+                <h4>Network Error:</h4>
+                <p>{{quickpay.error}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div class="btn-group">
+              <div ng-show="quickpay.loading" class="loader"></div>
+            </div>
+            <div class="btn-group">
+              <button type="button" ng-click="sendquickpay()" ng-disabled="!quickpayform.$valid||quickpay.loading" class="btn btn-success">Send</button>
+              <button type="button" ng-click="close()" ng-disabled="quickpay.loading" class="btn btn-warning">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

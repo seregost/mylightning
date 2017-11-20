@@ -213,6 +213,39 @@ app.post('/rest/v1/createinvoice', function (req, res) {
   }
 })
 
+app.post('/rest/v1/openchannel', function (req, res) {
+  try {
+    var userid = req.user.id;
+    var remotenode = req.body.remotenode;
+    var amount = req.body.amount;
+
+    lightningnodes[userid].openchannel(remotenode, amount, (response) => {
+      logger.verbose(userid, "/rest/v1/openchannel succeeded.")
+      logger.debug(userid, "Response:" + JSON.stringify(response));
+      res.send(response);
+    });
+  } catch (e) {
+    logger.error(userid, "Exception occurred in /rest/v1/openchannel: " + e.message);
+    res.sendStatus(500);
+  }
+})
+
+app.post('/rest/v1/closechannel', function (req, res) {
+  try {
+    var userid = req.user.id;
+    var channelpoint = req.body.channelpoint;
+
+    lightningnodes[userid].closechannel(channelpoint, (response) => {
+      logger.verbose(userid, "/rest/v1/closechannel succeeded.")
+      logger.debug(userid, "Response:" + JSON.stringify(response));
+      res.send(response);
+    });
+  } catch (e) {
+    logger.error(userid, "Exception occurred in /rest/v1/closechannel: " + e.message);
+    res.sendStatus(500);
+  }
+})
+
 app.get('/rest/v1/getinvoiceqr', function (req, res) {
   try {
     var userid = req.user.id;
@@ -251,7 +284,7 @@ app.get('/rest/v1/user', function (req, res) {
 app.get('/rest/v1/address', function (req, res) {
   fs.readFile('./db/'+req.user.id+'/address.json', 'utf8', function (err, data) {
     if (err) throw err;
-    res.send(data);
+    res.send(JSON.parse(data));
   });
 })
 
@@ -314,18 +347,26 @@ signalR.on('CONNECTED',function(){
             var lightning = lightningnodes[userid]
 
             var newtransactions = lightning.newtransactions();
-            if(lightning.shouldupdate() == true)
-            {
-              var message = {"method": "refresh", "params": []};
-              signalR.sendToUser(userid, message);
-              logger.silly(userid, "New refresh sent.");
-            }
-
             if(newtransactions.length > 0)
             {
               var message = {"method": "newtransactions", "params": newtransactions};
               signalR.sendToUser(userid, message);
               logger.silly(userid, "New transactions sent.");
+            }
+
+            var newchannels = lightning.newchannels();
+            if(newchannels.length > 0)
+            {
+              var message = {"method": "newchannels", "params": newchannels};
+              signalR.sendToUser(userid, message);
+              logger.silly(userid, "New channels sent.");
+            }
+            
+            if(lightning.shouldupdate() == true)
+            {
+              var message = {"method": "refresh", "params": []};
+              signalR.sendToUser(userid, message);
+              logger.silly(userid, "New refresh sent.");
             }
         }
       }

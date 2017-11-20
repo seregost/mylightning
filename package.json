@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "main": "main.js",
   "dependencies": {
+    "angular-modal-service": "^0.13.0",
     "bitcoin": "^3.0.1",
     "body-parser": "^1.18.2",
     "bootstrap-table": "^1.11.2",

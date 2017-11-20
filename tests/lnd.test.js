@@ -56,15 +56,33 @@ describe('lnd', function() {
       done();
     });
   });
+  it('should error on invalid invoice', (done) => {
+    lightning0.createinvoice("Test Invoice.", 5000, true, (result) => {
+      expect(result.error).to.be.an('object');
+      done();
+    });
+  });
   it('should successfully send a payment', (done) => {
     lightning1.sendinvoice(invoiceid, "The Bank", (result) => {
       expect(result.error).to.be.a('undefined');
       done();
     });
   });
+  it('should error on an invalid invoice', (done) => {
+    lightning1.sendinvoice("@", "The Bank", (result) => {
+      expect(result.error).to.be.an('object');
+      done();
+    });
+  });
   it('should successfully send a quickpay', (done) => {
     lightning1.quickpay(pub_key, 0.001, "The Bank", (result) => {
       expect(result.error).to.be.a('undefined');
+      done();
+    });
+  });
+  it('should error on invalid quickpay', (done) => {
+    lightning1.quickpay(pub_key, 5000, "The Bank", (result) => {
+      expect(result.error).to.be.an('object');
       done();
     });
   });

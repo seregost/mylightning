@@ -18,6 +18,7 @@ module.exports = function(config) {
       'server/js/jquery.min.js',
       'server/js/jquery.signalR.min.js',
       'node_modules/angular/angular.min.js',
+      'server/js/angular-modal-service.min.js',
       'node_modules/angular-mocks/angular-mocks.js',
       'server/services/*.service.js',
       'server/controllers/*.controller.js',
