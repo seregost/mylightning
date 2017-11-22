@@ -12,26 +12,21 @@ const cookieParser  = require('cookie-parser');
 const lightningmodule = require("./lightning/"+config.get("lightning-node"));
 const passport = require('passport');
 const googleStrategy = require('passport-google-oauth20').Strategy;
+const googleTokenStrategy = require('passport-google-id-token');
 const logger = require("./logger");
+const qr = require('qr-image');
+const UserManager = require('./utilities/usermanager.js');
 
-var usersById = {};
+var userManager = new UserManager("users")
 var lightningnodes = {};
 
-// Read user store.
-fs.readFile('./db/users.json', 'utf8', function (err, data) {
-  if (err) throw err;
-  usersById = JSON.parse(data);
-  logger.info("Loading users.json.")
-  // Startup lightning listeners.
-  var keys = Object.keys(usersById);
-  for(var i=0;i<keys.length;i++){
-      var userid = keys[i];
-      var rpcport = usersById[userid].rpcport;
-      var peerport = usersById[userid].peerport;
-      logger.info(userid, "Started listener on behalf of '" + usersById[userid].displayName + "' on port " + rpcport);
-      lightningnodes[userid] = new Lightning(userid, rpcport, peerport);
-  }
+userManager.each((userid, user) => {
+  var rpcport = user.rpcport;
+  var peerport = user.peerport;
+  logger.info(userid, "Started listener on behalf of '" + user.displayName + "' on port " + rpcport);
+  lightningnodes[userid] = new Lightning(userid, rpcport, peerport);
 });
+
 
 // Add new user.
 function addUser (userid, sourceUser) {
@@ -45,23 +40,34 @@ function addUser (userid, sourceUser) {
 }
 
 passport.use(new googleStrategy({
-    clientID: "213521797972-ju341sr3bv6pbhic0o5jnv0l057m6qca.apps.googleusercontent.com",
-    clientSecret: "HVYh7jbZEQBr0asBsrRZ2HOG",
+    clientID: "173191518858-6ublcr56m3eclo1lfu2p68qfp8otd58s.apps.googleusercontent.com",
+    clientSecret: "5iMWu0ZvP18gV8V4YrQRyr34",
     callbackURL: "https://seregost.com:8443/auth/google/callback"
   },
   function(accessToken, refreshToken, profile, cb) {
     logger.info(profile.id, "Google login attempt for profile: " + profile.displayName);
-    addUser(profile.id, profile);
-    profile.userName = profile.id
-    return cb(null, profile);
+    var user = userManager.adduser(profile.id, profile);
+    return cb(null, user);
+  }
+));
+
+passport.use(new googleTokenStrategy({
+    clientID: "173191518858-6ublcr56m3eclo1lfu2p68qfp8otd58s.apps.googleusercontent.com"
+  },
+  function(parsedToken, googleId, done) {
+    logger.info(googleId, "Google token authentication for user id: " + googleId);
+    var user = userManager.getuser(googleId);
+    return done(null, user);
   }
 ));
 
 passport.serializeUser(function(user, cb) {
+  logger.silly(user.id, "Serializing user to session.");
   cb(null, user);
 });
 
 passport.deserializeUser(function(obj, cb) {
+  logger.silly("Attempting to load user from session.")
   cb(null, obj);
 });
 
@@ -93,12 +99,25 @@ app.use(signalR.createListener());
 app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile'] }));
 
+app.post('/auth/google',
+  passport.authenticate('google-id-token'),
+  function (req, res) {
+    if(req.user != null) {
+      logger.info(req.user.id, "Successfully authenticated.")
+    }
+    else {
+      logger.error("Unauthorized login attempt with invalid token id.")
+    }
+    // do something with req.user
+    res.sendStatus(req.user ? 200 : 401);
+});
+
 app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   function(req, res) {
     // Successful authentication, redirect home.
     res.redirect('/');
-  });
+});
 
 // TODO: Possibly due some QoS on this to avoid spam?
 app.post('/rest/v1/requestinvoice', function (req, res) {
@@ -137,19 +156,24 @@ app.post('/rest/v1/requestinvoice', function (req, res) {
 
 // Blanketly require authentication before using any other resources.
 app.use('*', function(req, res, next) {
+  logger.silly("Attempting session authorization.")
   if(req.isAuthenticated())
   {
-    if(usersById[req.user.id].rpcport == null)
+    if(userManager.getuser(req.user.id).rpcport == null) {
       res.sendStatus(401);
+    }
     else
       next();
   }
   else {
-    // Return unauthorized for the rest api.
-    if(req.baseUrl.includes('rest/v1'))
+    // Attempt token authentication for the rest api
+    if(req.baseUrl.includes('rest/v1')) {
       res.sendStatus(401);
+    }
     else
+    {
       res.redirect('/auth/google')
+    }
   }
 });
 
@@ -201,8 +225,9 @@ app.post('/rest/v1/createinvoice', function (req, res) {
     var userid = req.user.id;
     var memo = req.body.memo;
     var amount = req.body.amount;
+    var quickpay = req.body.quickpay;
 
-    lightningnodes[userid].createinvoice(memo, amount, false, (response) => {
+    lightningnodes[userid].createinvoice(memo, amount, quickpay, (response) => {
       logger.verbose(userid, "/rest/v1/createinvoice succeeded.")
       logger.debug(userid, "Response:" + JSON.stringify(response));
       res.send(response);
@@ -274,9 +299,58 @@ app.get('/rest/v1/getinvoiceqr', function (req, res) {
   }
 })
 
-///////////////
+app.get('/rest/v1/getqrimage', function (req, res) {
+  try {
+    var userid = req.user.id;
+    var inputcode = req.query.inputcode;
 
+    var data = qr.imageSync(inputcode, { type: 'png' });
+
+    res.contentType("image/png");
+    res.send(data);
+  }
+  catch (e) {
+    logger.error(userid, "Exception occurred in /rest/v1/getinvoiceqr: " + e.message);
+    res.sendStatus(500);
+  }
+})
+
+///////////////
 // Data Services.
+
+/**
+* Get all quick data for a user in one go.
+*/
+app.get('/rest/v1/getalldata', function (req, res) {
+  try {
+    var datapackage = {user: req.user};
+
+    var dir = './db/'+req.user.id+'/';
+    readjson(dir+'address.json').then((data) => {
+      datapackage.address = JSON.parse(data);
+      return readjson(dir+'info.json');
+    }).then((data) => {
+      datapackage.info = JSON.parse(data);
+      return readjson(dir+'balances.json');
+    }).then((data) => {
+      datapackage.balances = JSON.parse(data);
+      return readjson(dir+'channels.json');
+    }).then((data) => {
+      datapackage.channels = JSON.parse(data);
+      return readjson(dir+'quickpaynodes.json');
+    }).then((data) => {
+      datapackage.quickpaynodes = JSON.parse(data);
+      res.send(datapackage);
+    }).catch((error) => {
+      logger.error(req.user.id, "Exception occurred in /rest/v1/getalldata: " + error);
+      res.sendStatus(500);
+    });
+  } catch(e) {
+    logger.error(req.user.id, "Exception occurred in /rest/v1/getalldata: " + e.message);
+    res.sendStatus(500);
+  }
+})
+
 app.get('/rest/v1/user', function (req, res) {
   res.send(req.user);
 })
@@ -327,6 +401,22 @@ app.get('*', function(req, res){
   res.sendStatus(404);
 });
 
+function readjson(path)
+{
+  return new Promise((resolve, reject) => {
+    if(!fs.existsSync(path)) {
+      logger.debug("Tried to fetch a file that doesn't exist: " + path);
+      resolve(null);
+    }
+    else {
+      fs.readFile(path, 'utf8', function (err, data) {
+        if (err) reject(err);
+        resolve(data);
+      });
+    }
+  });
+}
+
 logger.info("Configured REST routes");
 
 // Initialize SSL settings
@@ -361,7 +451,7 @@ signalR.on('CONNECTED',function(){
               signalR.sendToUser(userid, message);
               logger.silly(userid, "New channels sent.");
             }
-            
+
             if(lightning.shouldupdate() == true)
             {
               var message = {"method": "refresh", "params": []};

@@ -19,17 +19,43 @@ module.exports = class UserManager {
   }
 
   adduser(userid, sourceUser) {
-    var user;
-    if(this._usersById[userid] == null) {
-      user = this._usersById[userid] = {id: userid, displayName: sourceUser.displayName};
-      fs.writeFileSync(this._userdb, JSON.stringify(this._usersById))
-      logger.info(userid, "New user added to system.");
+    var user = this._usersById[userid];
+
+    if(user == null)
+    {
+        var user =
+        {
+          id: userid,
+          userName: userid,
+          displayName: sourceUser.displayName,
+          givenName: sourceUser.name.givenName,
+          photo: sourceUser.photos[0].value
+        };
+        logger.info(userid, "User record added.");
     }
+    else {
+        // Update any data points that might ahve changed.
+        user.userName = userid,
+        user.displayName = sourceUser.displayName;
+        user.givenName = sourceUser.name.givenName;
+        user.photo = sourceUser.photos[0].value;
+        logger.info(userid, "User record updated.");
+    }
+    this._usersById[userid] = user;
+    fs.writeFileSync(this._userdb, JSON.stringify(this._usersById))
+
     return this._usersById[userid];
   }
 
   getuser(userid) {
     return this._usersById[userid];
+  }
+
+  each(callback) {
+    var keys = Object.keys(this._usersById);
+    for(var i=0;i<keys.length;i++){
+      callback(keys[i], this._usersById[keys[i]])
+    }
   }
 
   deleteuser (userid) {

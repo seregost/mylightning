@@ -2,9 +2,8 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('MainController', ['$scope', 'lightningService', 'ModalService', function($scope, lightningService, ModalService) {
+  .controller('MainController', ['$scope', 'lightningService', 'ModalService', '$location', function($scope, lightningService, ModalService, $location) {
     var vm = this;
-    var connection = $.connection('/signalr');
 
     // Variables
     vm.selectedchannel = {"filter": "", "text": "All"};
@@ -21,6 +20,7 @@
     vm.docreateinvoice = docreateinvoice;
     vm.dosendpayment = dosendpayment;
     vm.doopenchannel = doopenchannel;
+    vm.doqrdisplay = doqrdisplay;
     vm.close = close;
 
     vm.channelfilterselected = channelfilterselected;
@@ -28,13 +28,13 @@
 
     vm.refresh();
 
+    registerTransitions();
     /**
     * SignalR receive message loop.
     * @param {json} data - contains type of update and any paramaters
     */
-    connection.received(function (data) {
+    $scope.$on('signalR', (tmp, data) => {
       if(data.method == "refresh") {
-        console.log("Refreshing account.");
         vm.refresh();
       }
       else if(data.method == "newtransactions") {
@@ -63,21 +63,21 @@
       }
     });
 
-    connection.stateChanged(function (change) {
-        if (change.newState === $.signalR.connectionState.reconnecting) {
-            // this should never happen so bail out and force refresh.
-            vm.serverdisconnected = true;
-            $scope.$apply();
-        }
-    });
+    // connection.stateChanged(function (change) {
+    //     if (change.newState === $.signalR.connectionState.reconnecting) {
+    //         // this should never happen so bail out and force refresh.
+    //         vm.serverdisconnected = true;
+    //         $scope.$apply();
+    //     }
+    // });
+    //
+    // connection.error(function(error) {
+    //     console.warn(error);
+    // });
 
-    connection.error(function(error) {
-        console.warn(error);
-    });
-
-    connection.start().done(function() {
-        console.log("connection started!");
-    });
+    // connection.start().done(function() {
+    //     console.log("connection started!");
+    // });
 
     /////////////////
 
@@ -104,7 +104,7 @@
             vm.quickpay = result;
             if(vm.quickpay.success == true)
             {
-              _displayalert("You sent a quickpay in the amount of: "+vm.quickpay.amount.toFixed(4))
+              _displayalert("You sent a payment to '"+vm.selectedalias.alias+"' in the amount of: "+vm.quickpay.amount.toFixed(4))
               vm.refresh();
             }
         });
@@ -135,6 +135,12 @@
       }).then(function(modal) {
           modal.element.modal();
           modal.close.then(function(result) {
+            vm.sendpayment = result;
+            if(vm.sendpayment.success == true)
+            {
+              _displayalert("You have successfully paid the invoice.")
+              vm.refresh();
+            }
         });
       });
     }
@@ -153,6 +159,20 @@
       });
     }
 
+    function doqrdisplay(caption, qrcode)
+    {
+      ModalService.showModal({
+        templateUrl: "modals/qrdisplay.html",
+        controller: "QRDisplayController",
+        inputs: {
+          qrinfo : {"caption": caption, "inputcode": qrcode}
+        }
+      }).then(function(modal) {
+          modal.element.modal();
+          modal.close.then(function(result) {
+        });
+      });
+    }
     /**
     * Close a specified channel.
     * @param {string} channelpoint - the channelpoint identifying the channel to close.
@@ -167,10 +187,12 @@
     * Refresh data from the server.  Called when page loads or SignalR events happen.
     */
     function refresh(){
-      lightningService.getQuickPayNodes().then((aliases) => {
-        if(Object.keys(aliases.data).length > 0)
+      lightningService.waitSync().then(() => {
+        return lightningService.getQuickPayNodes();
+      }).then((aliases) => {
+        if(Object.keys(aliases).length > 0)
           vm.hasaliases = true;
-        vm.quickpaynodes = aliases.data;
+        vm.quickpaynodes = aliases;
 
         // Set public keys.
         var keys = Object.keys(vm.quickpaynodes);
@@ -179,7 +201,7 @@
         }
         return lightningService.getChannels();
       }).then((response) => {
-        vm.channels = response.data;
+        vm.channels = response;
 
         // Update remote IDs to meaningful alias when we have.
         vm.channels.forEach((value) => {
@@ -192,22 +214,20 @@
         });
         return lightningService.getInfo();
       }).then((response) => {
-        vm.info = response.data;
+        vm.info = response;
         vm.blockchainsynced = vm.info.result.synchronized;
 
         return lightningService.getBalances();
       }).then((response) => {
-        vm.balances = response.data;
-        vm.balances.btcfunds /= 100000;
-        vm.balances.lntfunds /= 100000;
+        vm.balances = {"btcfunds": response.btcfunds/100000, "lntfunds": response.lntfunds/100000};
         return lightningService.getUsers()
       }).then((response) => {
-        vm.user = response.data;
+        vm.user = response;
         return lightningService.getAddress();
       }).then((response) => {
-        vm.btcaddress = response.data;
-
+        vm.btcaddress = response;
         vm.isloaded = true;
+        $scope.$apply();
       });
     }
 
@@ -221,5 +241,23 @@
        $('#imagepreview').attr('src', $('#imageresource').attr('src')); // here asign the image to the modal when the user click the enlarge link
        $('#imagemodal').modal('show'); // imagemodal is the id attribute assigned to the bootstrap modal, then i use the show function
     });
+
+    function registerTransitions()
+    {
+      var hammertime = new Hammer(document.getElementById('container'));
+
+      hammertime.on('swipeleft', function(ev) {
+          $scope.whichWayToMove = 'slide_from_left_to_right';
+
+          $location.path('/transactions');
+          $scope.$apply();
+      });
+      hammertime.on('swiperight', function(ev) {
+        $scope.whichWayToMove = 'slide_from_right_to_left';
+
+        $location.path('/');
+        $scope.$apply();
+      });
+    }
   }]);
 })();

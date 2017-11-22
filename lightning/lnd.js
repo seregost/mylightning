@@ -143,11 +143,7 @@ module.exports = class Lighting {
         catch (e) {
           logger.error(this._userid, "Failed to refresh information with error: " + e.message)
         }
-        // var qr_svg = qr.image(
-        //   response.result.nodeId + "@" +
-        //   response.result.alias + ".com:" +
-        //   response.result.port, {type: 'png'});
-        // qr_svg.pipe(require('fs').createWriteStream('serverqr.png'));
+
       });
     } catch (e) {
       logger.error(this._userid, "Failed to refresh information with error: " + e.message)

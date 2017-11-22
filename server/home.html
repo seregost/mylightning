@@ -1,0 +1,151 @@
+<div id="home" class="myfadein">
+  <div class="container-fluid">
+    <div id="homePage" class="row" ng-cloak ng-show="vm.isloaded">
+      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <b><h4 ng-cloak><img ng-src="{{vm.user.photo}}" ng-cloak class="img-circle special-img" style="border: 1px solid; -webkit-border-radius: 10px;-moz-border-radius: 10px;border-radius: 10px;top:-10px;width: 40px; height: 40px;"/>
+              {{vm.user.givenName}}'s Wallet<h4></b>
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-sm-12">
+                    <blockquote class="walletblock">
+                      <ul class="list-inline compact">
+                        <!-- <li class="h4"><span class="label label-default mono">milliBTC:</span></li> -->
+                        <li class="h4 mono text-right" style="width: 10em">
+                          <b>Available </b><span class="bg-primary h6">(mBTC)</span><br>
+                          <div id="btc-funds" style="margin-top:10px" class="text-right" ng-cloak>{{vm.balances.btcfunds | number: 4}}</div>
+                        </li>
+                        <li>
+                          <img src="icons/bitcoin.png" style="vertical-align:bottom;width: 50px; height: 50px;">
+                        </li>
+                      </ul>
+                      <ul class="list-inline compact">
+                        <li class="h4 mono text-right"  style="width: 10em">
+                          <b>In Channel</b> <span class="bg-primary h6">(mBTC)</span><br>
+                          <div id="lnt-funds" style="margin-top:10px;" class="text-right" ng-cloak>{{vm.balances.lntfunds | number: 4}}</div>
+                        </li>
+                        <li>
+                          <img src="icons/lightning.png" style="vertical-align:bottom;width: 50px; height: 50px;">
+                        </li>
+                      </ul>
+                    </blockquote>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    <strong><span class="glyphicon glyphicon-qrcode qrcodeicon"></span> Bitcoin Address: </strong>
+                    <p class="mono" ng-cloak><a href="javascript:void(0)" ng-click="vm.doqrdisplay('Bitcoin Address', vm.btcaddress)"><blockquote class="walletblock">{{vm.btcaddress}}</blockquote></a></p>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    <strong><span style="padding-left:-3px;" class="glyphicon glyphicon-qrcode qrcodeicon"></span> Lightning Connection Code: </strong>
+                    <p class="mono" ng-cloak>
+                      <a href="javascript:void(0)" ng-click="vm.doqrdisplay('Lightning Connection Code', vm.info.result.nodeId+'@'+vm.info.result.alias+':'+vm.info.result.port)">
+                        <blockquote class="walletblock">{{vm.info.result.nodeId}}@{{vm.info.result.alias}}:{{vm.info.result.port}}
+                        </blockquote>
+                      </a>
+                    </p>
+                  </div>
+                </div>
+                <br>
+                <div class="row">
+                  <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                    <div class="btn-group">
+                      <div class="btn-group">
+                        <div class="dropup" ng-cloak ng-show="vm.hasaliases">
+                          <button ng-disabled="vm.serverdisconnected||!vm.blockchainsynced" type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">Make Payment
+                            <span class="caret"></span>
+                          </button>
+                          <ul class="dropdown-menu" role="menu"  ng-show="vm.hasaliases">
+                            <li class="dropdown-header" style="font-size:1.2em;">Quick Payment Options</li>
+                            <li ng-repeat="u in vm.quickpaynodes" style="font-size:1.2em;"><a href="javascript:void(0)" ng-click="vm.doquickpay(u.pub_key)">{{u.alias}}</a></li>
+                            <li class="divider"></li>
+                            <li style="font-size:1.2em;"><a href="javascript:void(0)" ng-click="vm.dosendpayment()">Pay Invoice</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                      <button type="button" ng-click="vm.dosendpayment()" ng-disabled="vm.serverdisconnected||!vm.blockchainsynced" class="btn btn-success" ng-show="!vm.hasaliases">Make Payment</button>
+                      <button type="button" ng-click="vm.docreateinvoice()" ng-disabled="vm.serverdisconnected||!vm.blockchainsynced" class="btn btn-warning" >Create Invoice</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row" ng-cloak ng-show="vm.isloaded">
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <ul class="list-inline">
+                  <!-- <li class="h4"><span class="label label-default mono">milliBTC:</span></li> -->
+                  <li class="h4">
+                    <b>Your Channels</b><br>
+                    <b class="h6">Viewing: ({{vm.selectedchannel.text}})</b>
+                  </li>
+                  <li>
+                    <div class="dropup" style="vertical-align:bottom;">
+                      <button type="button" ng-click="vm.doopenchannel()" ng-disabled="vm.serverdisconnected||!vm.blockchainsynced" class="btn btn-primary btn-sm">Open New</button>
+                      <div class="btn-group">
+                        <button class="btn btn-primary dropdown-toggle btn-sm" type="button" data-toggle="dropdown">Filter
+                          <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li><a style="cursor:pointer" ng-click="vm.channelfilterselected('', 'All')">All</a></li>
+                          <li><a style="cursor:pointer" ng-click="vm.channelfilterselected('Open', 'Open')">Open</a></li>
+                          <li><a style="cursor:pointer" ng-click="vm.channelfilterselected('Pending', 'Pending')">Pending</a></li>
+                          <li><a style="cursor:pointer" ng-click="vm.channelfilterselected('Closing', 'Closing')">Closing</a></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div class="panel-body">
+                <div ng-cloak ng-repeat="u in vm.channels | filter: { state: vm.selectedchannel.filter }" class="panel panel-default shadow">
+                  <div class="panel-body">
+                    <div class="row">
+                      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                        <strong>Remote Node ID:</strong>
+                        <p>{{u.node}}<br/>
+                          <span class="label label-primary">{{u.alias}}</span></p>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                        <div class="progress" style="height:10px">
+                          <div class="progress-bar progress-bar-success" role="progressbar" style="transition:none;width: {{u.balance/u.capacity*100}}%" aria-valuenow="{{u.balance}}" aria-valuemin="0" aria-valuemax="{{u.capacity}}"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-xs-5 col-sm-2 col-md-2 col-lg-2">
+                        <strong>My Balance:</strong>
+                        <p>{{u.balance | number: 4}}</p>
+                      </div>
+                      <div class="col-xs-4 col-sm-2 col-md-2 col-lg-2">
+                        <strong>Limit:</strong>
+                        <p>{{u.capacity | number: 4}}</p>
+                      </div>
+                      <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+                        <strong>Status:</strong>
+                        <p>{{u.state}}</p>
+                      </div>
+                      <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 text-right">
+                        <div class="btn-group">
+                          <div class="btn btn-primary" ng-click="vm.close(u.channel)">Close</div>
+                          <div class="btn btn-primary" ng-click="vm.forceclose(u.channel)">Force Close</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>

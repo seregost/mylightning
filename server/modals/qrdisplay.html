@@ -1,0 +1,18 @@
+<!-- QR Code Modal -->
+<div class="modal fade" id="imagemodal" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close"  ng-click="close()"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title" id="modallabel">{{qrinfo.caption}}</h4>
+      </div>
+      <div class="modal-body" align="center">
+        <img src="https://seregost.com:8443/rest/v1/getqrimage?inputcode={{qrinfo.inputcode}}" id="imagepreview" style="width: 300px; height: 300px;" ><br/><br/>
+        <p ng-cloak class="mono" align="center" style="width: 100%;word-wrap: break-word!important"><strong>{{qrinfo.inputcode}}</strong></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" ng-click="close()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -4,19 +4,36 @@
   .controller('SendPaymentController', ['$scope', '$element', 'lightningService', 'ModalService', 'close', function($scope, $element, lightningService, ModalService, close) {
     $scope.sendpayment = {};
     $scope.doqrscanner = () => {
-      // angular.element('#quickpaymodal').modal('show');
-      ModalService.showModal({
-        templateUrl: "modals/qrscanner.html",
-        controller: "QRScannerController",
-      }).then(function(modal) {
+      if(window.cordova != null) {
+        cordova.plugins.barcodeScanner.scan(
+          function (result) {
+            if(!result.cancelled) {
+              if(result.format == "QR_CODE") {
+                $scope.sendpayment.invoicecode = result.text;
+                $scope.$apply();
+              }
+            }
+          },
+          function (error) {
+            alert("Scanning failed: " + error);
+          }
+        );
+      }
+      else {
+        // angular.element('#quickpaymodal').modal('show');
+        ModalService.showModal({
+          templateUrl: "modals/qrscanner.html",
+          controller: "QRScannerController",
+        }).then(function(modal) {
           // The modal object has the element built, if this is a bootstrap modal
           // you can call 'modal' to show it, if it's a custom modal just show or hide
           // it as you need to.
           modal.element.modal();
           modal.close.then(function(result) {
             $scope.sendpayment.invoicecode = result;
+          });
         });
-      });
+      }
     }
     $scope.sendpayment = () => {
       var invoicecode = $scope.sendpayment.invoicecode;
@@ -28,6 +45,7 @@
         lightningService.execSendInvoice(invoicecode, alias).then((response) => {
           if(response.data.error == null) {
             $scope.sendpayment.haserror = false;
+            $scope.sendpayment.success = true;
 
             closemodal();
             close($scope.sendpayment, 500);

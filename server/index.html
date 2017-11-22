@@ -2,7 +2,10 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline'; style-src * 'unsafe-inline'; media-src *">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="msapplication-tap-highlight" content="no">
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
   <title>myLightning Wallet</title>
 
   <!-- favicon -->
@@ -20,13 +23,16 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.js"></script>
-  <script src="signalr/hubs"></script>
   <script src="js/angular-1.6.7.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-route.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-animate.js"></script>
   <script src="js/angular-modal-service.min.js"></script>
   <script src="js/jsqrcode-combined.min.js"></script>
   <script src="js/html5-qrcode.min.js"></script>
+  <script src="js/hammer.min.js"></script>
 
   <!-- Angular control -->
+  <script src="configs/routeconfig.js"></script>
   <script src="services/lightning.service.js"></script>
   <script src="controllers/qrscanner.controller.js"></script>
   <script src="controllers/index.controller.js"></script>
@@ -34,11 +40,14 @@
   <script src="controllers/createinvoice.controller.js"></script>
   <script src="controllers/sendpayment.controller.js"></script>
   <script src="controllers/openchannel.controller.js"></script>
+  <script src="controllers/qrdisplay.controller.js"></script>
+
+  <base href="/">
 </head>
 
 <body>
-  <div id="container" ng-app="myLightning" ng-controller="MainController as vm">
-    <nav class="navbar navbar-default">
+  <div id="container" ng-controller="MainController as vm">
+    <nav class="navbar navbar-fixed-top navbar-default">
       <div class="container-fluid">
         <div class="navbar-header" nowrap>
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -50,18 +59,10 @@
         </div>
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
-            <li><a href="#">Transactions</a></li>
+            <li class="active"><a href="/">Home</a></li>
+            <li><a href="/transactions">Transactions</a></li>
             <li><a href="#">Settings</a></li>
           </ul>
-          <!-- <ul class="nav navbar-nav navbar-right">
-            <li >
-              <a href="/auth/google" class="dropdown-toggle" data-toggle="dropdown">
-                <img ng-src="{{user.photos[0].value}}" class="img-circle special-img" style="vertical-align:center;width: 30px; height: 30px;"/>
-                <strong>Hi, {{user.displayName}}!</strong>
-              </a>
-            </li>
-          </ul> -->
         </div>
       </div>
     </nav>
@@ -89,182 +90,14 @@
           </li>
         </ul>
       </div>
-      <div class="row" ng-cloak ng-show="vm.isloaded">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <b><h4 ng-cloak><img ng-src="{{vm.user.photos[0].value}}" ng-cloak class="img-circle special-img" style="border: 1px solid; -webkit-border-radius: 10px;-moz-border-radius: 10px;border-radius: 10px;top:-10px;width: 40px; height: 40px;"/>
-               {{vm.user.name.givenName}}'s Wallet<h4></b></div>
-            <div class="panel-body">
-              <div class="row">
-                <div class="col-sm-12">
-                  <blockquote>
-                    <ul class="list-inline compact">
-                      <!-- <li class="h4"><span class="label label-default mono">milliBTC:</span></li> -->
-                      <li class="h4 mono text-right" style="width: 10em">
-                        <b>Available </b><span class="bg-primary h6">(mBTC)</span><br>
-                        <div id="btc-funds" style="margin-top:10px" class="text-right" ng-cloak>{{vm.balances.btcfunds | number: 4}}</div>
-                      </li>
-                      <li>
-                        <img src="icons/bitcoin.png" style="vertical-align:bottom;width: 50px; height: 50px;">
-                      </li>
-                    </ul>
-                    <ul class="list-inline compact">
-                      <li class="h4 mono text-right"  style="width: 10em">
-                        <b>In Channel</b> <span class="bg-primary h6">(mBTC)</span><br>
-                        <div id="lnt-funds" style="margin-top:10px;" class="text-right" ng-cloak>{{vm.balances.lntfunds | number: 4}}</div>
-                      </li>
-                      <li>
-                        <img src="icons/lightning.png" style="vertical-align:bottom;width: 50px; height: 50px;">
-                      </li>
-                    </ul>
-                  </blockquote>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                  <strong>Recieve Address: </strong><div class="glyphicon glyphicon-qrcode"></div>
-                  <p ng-cloak>{{vm.btcaddress}}</p>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                  <strong>Node ID: </strong><div class="glyphicon glyphicon-qrcode"></div>
-                  <p id="address" ng-cloak>{{vm.info.result.nodeId}}</p>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-xs-6 col-sm-2 col-md-2 col-lg-2">
-                  <strong>Alias:</strong>
-                  <p id="alias" ng-cloak>{{vm.info.result.alias}}</p>
-                </div>
-                <div class="col-xs-6 col-sm-2 col-md-2 col-lg-2">
-                  <strong>Port:</strong>
-                  <p id="port" ng-cloak>{{vm.info.result.port}}</p>
-                </div>
-                <div class="col-sm-4">
-                  <strong>Connection Code:</strong>
-                  <br/>
-                  <a href="#" id="pop">
-                    <img id="imageresource" src="img/serverqr.png" style="width: 40px; height: 40px;">
-                    Click to Enlarge
-                  </a>
-                </div>
-              </div>
-              <br>
-              <div class="row">
-                <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
-                  <div class="btn-group">
-                    <div class="btn-group">
-                      <div class="dropup" ng-cloak ng-show="vm.hasaliases">
-                        <button ng-disabled="vm.serverdisconnected||!vm.blockchainsynced" type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">Make Payment
-                          <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu" role="menu"  ng-show="vm.hasaliases">
-                          <li class="dropdown-header">Quick Payment Options</li>
-                          <li ng-repeat="u in vm.quickpaynodes"><a style="cursor:pointer" ng-click="vm.doquickpay(u.pub_key)">{{u.alias}}</a></li>
-                          <li class="divider"></li>
-                          <li><a ng-click="vm.dosendpayment()" <a style="cursor:pointer">Pay Invoice</a></li>
-                        </ul>
-                      </div>
-                    </div>
-                    <button type="button" ng-click="vm.dosendpayment()" ng-disabled="vm.serverdisconnected||!vm.blockchainsynced" class="btn btn-success" ng-show="!vm.hasaliases">Make Payment</button>
-                    <button type="button" ng-click="vm.docreateinvoice()" ng-disabled="vm.serverdisconnected||!vm.blockchainsynced" class="btn btn-warning" >Create Invoice</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row" ng-cloak ng-show="vm.isloaded">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <ul class="list-inline">
-                <!-- <li class="h4"><span class="label label-default mono">milliBTC:</span></li> -->
-                <li class="h4">
-                  <b>Your Channels</b><br>
-                  <b class="h6">Viewing: ({{vm.selectedchannel.text}})</b>
-                </li>
-                <li>
-                  <div class="dropup" style="vertical-align:bottom;">
-                    <button type="button" ng-click="vm.doopenchannel()" ng-disabled="vm.serverdisconnected||!vm.blockchainsynced" class="btn btn-primary btn-sm">Open New</button>
-                    <div class="btn-group">
-                      <button class="btn btn-primary dropdown-toggle btn-sm" type="button" data-toggle="dropdown">Filter
-                        <span class="caret"></span>
-                      </button>
-                      <ul class="dropdown-menu">
-                        <li><a style="cursor:pointer" ng-click="vm.channelfilterselected('', 'All')">All</a></li>
-                        <li><a style="cursor:pointer" ng-click="vm.channelfilterselected('Open', 'Open')">Open</a></li>
-                        <li><a style="cursor:pointer" ng-click="vm.channelfilterselected('Pending', 'Pending')">Pending</a></li>
-                        <li><a style="cursor:pointer" ng-click="vm.channelfilterselected('Closing', 'Closing')">Closing</a></li>
-                      </ul>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="panel-body">
-              <div ng-cloak ng-repeat="u in vm.channels | filter: { state: vm.selectedchannel.filter }" class="panel panel-default shadow">
-                <div class="panel-body">
-                  <div class="row">
-                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                      <strong>Remote Node ID:</strong>
-                      <p>{{u.node}}<br/>
-                      <span class="label label-primary">{{u.alias}}</span></p>
-                    </div>
-                  </div>
-              <div class="row">
-                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                  <div class="progress" style="height:10px">
-                    <div class="progress-bar progress-bar-success" role="progressbar" style="transition:none;width: {{u.balance/u.capacity*100}}%" aria-valuenow="{{u.balance}}" aria-valuemin="0" aria-valuemax="{{u.capacity}}"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-xs-5 col-sm-2 col-md-2 col-lg-2">
-                  <strong>My Balance:</strong>
-                  <p>{{u.balance | number: 4}}</p>
-                </div>
-                <div class="col-xs-4 col-sm-2 col-md-2 col-lg-2">
-                  <strong>Limit:</strong>
-                  <p>{{u.capacity | number: 4}}</p>
-                </div>
-                <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
-                  <strong>Status:</strong>
-                  <p>{{u.state}}</p>
-                </div>
-                <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 text-right">
-                  <div class="btn-group">
-                    <div class="btn btn-primary" ng-click="vm.close(u.channel)">Close</div>
-                    <div class="btn btn-primary" ng-click="vm.forceclose(u.channel)">Force Close</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    </div>
+
+    <div class="{{whichWayToMove}}">
+      <div ng-view class="my_web_div"></div>
     </div>
   </div>
-  <!-- QR Code Modal -->
-  <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-          <h4 class="modal-title" id="modallabel">QR Address Viewer</h4>
-        </div>
-        <div class="modal-body" align="center">
-          <img src="" id="imagepreview" style="width: 300px; height: 300px;" >
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-success" data-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+  <div class="app"/>
+  <!-- <script type="text/javascript" src="cordova.js"></script> -->
+  <script type="text/javascript" src="index.js"></script>
 </body>
 </html>

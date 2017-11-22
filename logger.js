@@ -2,7 +2,7 @@ const winston = require("winston");
 
 var config = winston.config;
 module.exports = new (winston.Logger)({
-  level: 'info',
+  level: 'verbose',
   transports: [
     new (winston.transports.Console)({
       timestamp: function() {

@@ -9,18 +9,18 @@
       if(amount > 0) {
         $scope.createinvoice.loading=true;
 
-        lightningService.execCreateInvoice(amount, memo).then((response) => {
+        var quickpay = false;
+        // TODO: get rid of jquery!
+        if($("#invoiceeasypay").is(":checked") == true) {
+          quickpay=true;
+        }
+
+        lightningService.execCreateInvoice(amount, memo, quickpay).then((response) => {
           if(response.data.error == null) {
             $scope.createinvoice.haserror = false;
             $scope.createinvoice.codeready = true;
-            var easypay = "";
 
-            if($("#invoiceeasypay").is(":checked") == true) {
-              console.log("easypay");
-              easypay = "easypay&";
-            }
-
-            $('#invoice-image').show().attr('src', "rest/v1/getinvoiceqr?" + easypay + new Date().getTime());
+            $('#invoice-image').show().attr('src', "rest/v1/getqrimage?inputcode=" + response.data.payment_request);
             $scope.createinvoice.invoicecode = response.data.payment_request;
           }
           else {
