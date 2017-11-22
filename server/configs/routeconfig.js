@@ -4,11 +4,11 @@ angular.module("myLightning", ['angularModalService', "ngRoute", 'ngAnimate'])
   $locationProvider.html5Mode(true);
   $routeProvider
   .when("/", {
-    templateUrl : "home.html",
-    controller: "MainController"
+    templateUrl : "views/home.html",
+    controller: "HomeController"
   })
   .when("/transactions", {
-    templateUrl : "transactions.html",
-    controller: "MainController"
+    templateUrl : "views/transactions.html",
+    controller: "TransactionController"
   });
 }]);

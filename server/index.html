@@ -34,19 +34,27 @@
   <!-- Angular control -->
   <script src="configs/routeconfig.js"></script>
   <script src="services/lightning.service.js"></script>
-  <script src="controllers/qrscanner.controller.js"></script>
+
+  <!-- View Controllers -->
   <script src="controllers/index.controller.js"></script>
+  <script src="controllers/home.controller.js"></script>
+  <script src="controllers/transactions.controller.js"></script>
+
+  <!-- Modal Controllers -->
+  <script src="controllers/qrscanner.controller.js"></script>
   <script src="controllers/sendquickpay.controller.js"></script>
   <script src="controllers/createinvoice.controller.js"></script>
   <script src="controllers/sendpayment.controller.js"></script>
   <script src="controllers/openchannel.controller.js"></script>
   <script src="controllers/qrdisplay.controller.js"></script>
 
+  <!-- <script type="text/javascript" src="cordova.js"></script> -->
+  <script type="text/javascript" src="index.js"></script>
   <base href="/">
 </head>
 
 <body>
-  <div id="container" ng-controller="MainController as vm">
+  <div id="container" ng-controller="MainController as main">
     <nav class="navbar navbar-fixed-top navbar-default">
       <div class="container-fluid">
         <div class="navbar-header" nowrap>
@@ -69,20 +77,20 @@
     <div class="container-fluid">
       <div id="alertbox" class="alert alert-info error-container col-xs-5 col-sm-5 col-md-5 col-lg-5" style="right:20px;" hidden>
         <button type="button" class="close" data-dismiss="alert">×</button>
-        <strong><b>Congrats! </b></strong><span>{{vm.alerttext}}</span>
+        <strong><b>Congrats! </b></strong><span>{{main.alerttext}}</span>
       </div>
-      <div id="blockchain-notification" ng-cloak ng-show="!vm.blockchainsynced" class="alert alert-warning">
+      <div id="blockchain-notification" ng-cloak ng-show="!main.blockchainsynced" class="alert alert-warning">
         <h4>Please wait while synchronizing to blockchain!</h4>
         <ul class="list-inline compact">
           <li class="h5">
             <b>Current block height:</b><br>
           </li>
           <li class="h5">
-            <div id="blockchain-notification-text">{{vm.info.result.blockheight}}</div>
+            <div id="blockchain-notification-text">{{main.info.result.blockheight}}</div>
           </li>
         </ul>
       </div>
-      <div ng-cloak ng-show="vm.serverdisconnected" class="alert alert-danger">
+      <div ng-cloak ng-show="main.serverdisconnected" class="alert alert-danger">
         <h4>Your connection to the server has been unexpectedly lost!</h4>
         <ul class="list-inline compact">
           <li class="h5">
@@ -91,13 +99,10 @@
         </ul>
       </div>
     </div>
-
     <div class="{{whichWayToMove}}">
       <div ng-view class="my_web_div"></div>
     </div>
   </div>
   <div class="app"/>
-  <!-- <script type="text/javascript" src="cordova.js"></script> -->
-  <script type="text/javascript" src="index.js"></script>
 </body>
 </html>

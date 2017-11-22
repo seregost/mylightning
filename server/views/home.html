@@ -1,4 +1,4 @@
-<div id="home" class="myfadein">
+<div id="home" class="myfadein" ng-controller="HomeController as vm">
   <div class="container-fluid">
     <div id="homePage" class="row" ng-cloak ng-show="vm.isloaded">
       <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
@@ -56,7 +56,7 @@
                     <div class="btn-group">
                       <div class="btn-group">
                         <div class="dropup" ng-cloak ng-show="vm.hasaliases">
-                          <button ng-disabled="vm.serverdisconnected||!vm.blockchainsynced" type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">Make Payment
+                          <button ng-disabled="main.serverdisconnected||!main.blockchainsynced" type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">Make Payment
                             <span class="caret"></span>
                           </button>
                           <ul class="dropdown-menu" role="menu"  ng-show="vm.hasaliases">
@@ -67,8 +67,8 @@
                           </ul>
                         </div>
                       </div>
-                      <button type="button" ng-click="vm.dosendpayment()" ng-disabled="vm.serverdisconnected||!vm.blockchainsynced" class="btn btn-success" ng-show="!vm.hasaliases">Make Payment</button>
-                      <button type="button" ng-click="vm.docreateinvoice()" ng-disabled="vm.serverdisconnected||!vm.blockchainsynced" class="btn btn-warning" >Create Invoice</button>
+                      <button type="button" ng-click="vm.dosendpayment()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-success" ng-show="!vm.hasaliases">Make Payment</button>
+                      <button type="button" ng-click="vm.docreateinvoice()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-warning" >Create Invoice</button>
                     </div>
                   </div>
                 </div>
@@ -88,7 +88,7 @@
                   </li>
                   <li>
                     <div class="dropup" style="vertical-align:bottom;">
-                      <button type="button" ng-click="vm.doopenchannel()" ng-disabled="vm.serverdisconnected||!vm.blockchainsynced" class="btn btn-primary btn-sm">Open New</button>
+                      <button type="button" ng-click="vm.doopenchannel()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-primary btn-sm">Open New</button>
                       <div class="btn-group">
                         <button class="btn btn-primary dropdown-toggle btn-sm" type="button" data-toggle="dropdown">Filter
                           <span class="caret"></span>

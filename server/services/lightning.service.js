@@ -4,10 +4,11 @@
   angular.module('myLightning')
   .service('lightningService', ['$rootScope', '$http', function($rootScope, $http) {
       var connection = $.connection("/signalr");
-
       var ls = this;
+
       ls._data = null;
       ls._server = "https://seregost.com:8443/";
+
 
       connection.received(function (data) {
         console.log("Running refresh");
@@ -15,16 +16,14 @@
           // invalidate cache
           ls._data = null;
         }
-        $rootScope.$broadcast("signalR", data);
+        $rootScope.$broadcast("server:message", data);
       });
 
-      // connection.stateChanged(function (change) {
-      //     if (change.newState === $.signalR.connectionState.reconnecting) {
-      //         // this should never happen so bail out and force refresh.
-      //         vm.serverdisconnected = true;
-      //         $scope.$apply();
-      //     }
-      // });
+      connection.stateChanged(function (change) {
+          if (change.newState === $.signalR.connectionState.reconnecting) {
+            $rootScope.$broadcast("server:disconnected", null);
+          }
+      });
 
       connection.error(function(error) {
           console.warn(error);
