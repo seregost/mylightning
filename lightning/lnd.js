@@ -135,7 +135,14 @@ module.exports = class Lighting {
               local.channels((channels) => {
                 sortJsonArray(channels, 'channel');
                 fs.writeFileSync(dir+'channels.json', JSON.stringify(channels));
-                local._hasupdate = true;
+
+                local.gettransactions((transactions) =>{
+                  sortJsonArray(transactions, 'time_stamp', 'des');
+                  transactions = transactions.slice(0,50);
+                  fs.writeFileSync(dir+'transactions.json', JSON.stringify(transactions));
+
+                  local._hasupdate = true;
+                });
               });
             });
           });
@@ -255,10 +262,10 @@ module.exports = class Lighting {
           "amount": value.amount/100000,
           "num_confirmations": value.num_confirmations,
           "time_stamp": value.time_stamp,
-          "total_fees": value.total_fees
+          "total_fees": value.total_fees/100000
         });
       });
-      logger.verbose(this._userid, "lnd.gettransactions succeeded.");
+      logger.silly(this._userid, "lnd.gettransactions succeeded.");
       callback(transactions);
     });
   }

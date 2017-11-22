@@ -7,6 +7,7 @@
 
     // Function binding
     vm.refresh = refresh;
+    vm.isloaded = false;
 
     vm.refresh();
 
@@ -32,9 +33,32 @@
     */
     function refresh(){
       lightningService.waitSync().then(() => {
-        return lightningService.getQuickPayNodes();
-      }).then((aliases) => {
-        // TODO: Implement refresh.
+        return lightningService.getUsers();
+      }).then((user) => {
+        vm.user = user;
+        return lightningService.getTransactions();
+      }).then((transactions) => {
+        vm.transactions = transactions;
+        vm.transactions.forEach((value) => {
+          var monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+            "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
+          ];
+
+          var time_stamp = new Date(value.time_stamp*1000);
+          value.month = monthNames[time_stamp.getMonth()];
+          value.day = time_stamp.getDate();
+
+          if(value.amount > 0) {
+            value.desc = "Received Bitcoin"
+            value.desc_sub = "From Bitcoin address"
+          }
+          if(value.amount < 0) {
+            value.desc = "Sent Bitcoin"
+            value.desc_sub = "To Bitcoin address"
+          }
+        });
+        vm.isloaded = true;
+        $scope.$apply();
       });
     }
 

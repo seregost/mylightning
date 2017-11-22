@@ -340,6 +340,9 @@ app.get('/rest/v1/getalldata', function (req, res) {
       return readjson(dir+'quickpaynodes.json');
     }).then((data) => {
       datapackage.quickpaynodes = JSON.parse(data);
+      return readjson(dir+'transactions.json');
+    }).then((data) => {
+      datapackage.transactions = JSON.parse(data);
       res.send(datapackage);
     }).catch((error) => {
       logger.error(req.user.id, "Exception occurred in /rest/v1/getalldata: " + error);

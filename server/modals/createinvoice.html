@@ -54,8 +54,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <div class="btn-group">
-            <div ng-show="createinvoice.loading" class="loader"></div>
+          <div class="btn-group" ng-show="createinvoice.loading">
+            <div class="loader"></div>
           </div>
           <div class="btn-group">
             <button type="button" ng-click="createinvoice()" ng-disabled="!createinvoiceform.$valid||createinvoice.loading" class="btn btn-success">Generate</button>

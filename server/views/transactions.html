@@ -1,3 +1,41 @@
-<div id="transactions" class="myfadein">
-  TODO: Show a list of transactions.
+<div id="transactions" class="myfadein" ng-controller="TransactionController as vm">
+  <div class="container-fluid">
+    <div id="homePage" class="row" ng-cloak ng-show="vm.isloaded">
+      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <b><h4 ng-cloak><img ng-src="{{vm.user.photo}}" ng-cloak class="img-circle special-img" style="border: 1px solid; -webkit-border-radius: 10px;-moz-border-radius: 10px;border-radius: 10px;top:-10px;width: 40px; height: 40px;"/>
+              {{vm.user.givenName}}'s Latest Transactions<h4></b>
+          </div>
+          <div class="panel-body">
+            <div ng-cloak ng-repeat="u in vm.transactions" class="panel panel-default">
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
+                    <ul class="list-inline compact">
+                      <li class="text-right">
+                        <strong style="font-size:1.2em">{{u.month}}</strong><br>
+                        {{u.day}}
+                      </li>
+                      <li class="text-right" style="width:60px">
+                        <img src="icons/bitcoin.png" style="vertical-align:bottom;width: 40px; height: 40px;"/>
+                      </li>
+                      <li>
+                        <strong style="font-size:1.2em">{{u.desc}}</strong><br>
+                        {{u.desc_sub}}
+                      </li>
+                    </ul>
+                  </div>
+                  <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3 text-right">
+                    <strong style="font-size:1.2em">{{u.amount | number: 4}}</strong><br>
+                    {{u.total_fees  | number: 4}}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

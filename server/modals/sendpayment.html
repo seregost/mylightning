@@ -40,8 +40,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <div class="btn-group">
-            <div ng-show="sendpayment.loading" class="loader"></div>
+          <div class="btn-group" ng-show="createinvoice.loading">
+            <div class="loader"></div>
           </div>
           <div class="btn-group">
             <button type="button" ng-click="sendpayment()" ng-disabled="!sendpaymentform.$valid||sendpayment.loading" class="btn btn-success" >Send</button>

@@ -38,8 +38,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <div class="btn-group">
-            <div ng-show="openchannel.loading" class="loader"></div>
+          <div class="btn-group" ng-show="createinvoice.loading">
+            <div class="loader"></div>
           </div>
           <div class="btn-group">
             <button type="button" ng-click="openchannel()" ng-disabled="!openchannelform.$valid||openchannel.loading" class="btn btn-success">Send</button>

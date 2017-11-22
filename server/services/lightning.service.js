@@ -71,6 +71,10 @@
           return new Promise((resolve) => resolve(ls._data.quickpaynodes));
       };
 
+      ls.getTransactions = function() {
+          return new Promise((resolve) => resolve(ls._data.transactions));
+      };
+
       ls.execQuickPay = function(dest, amount, memo) {
         return $http.post(ls._server + 'rest/v1/quickpay', {"dest": dest, "memo": memo, "amount": parseFloat(amount)});
       };
