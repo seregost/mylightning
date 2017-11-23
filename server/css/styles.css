@@ -92,10 +92,15 @@ body { padding-right: 0 !important; padding-top: 70px; overflow-x: hidden}
 
 .myfadein {
   opacity:0;
-  -webkit-animation:fadeIn 0.5s;
-  -moz-animation:fadeIn 0.5s;
-  animation:fadeIn 0.5s;
+  -webkit-animation:fadeIn 1s;
+  -moz-animation:fadeIn 1s;
+  animation:fadeIn 1s;
   animation-fill-mode: forwards;
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  -ms-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .slide_from_left_to_right [ng-view]{
@@ -105,22 +110,26 @@ body { padding-right: 0 !important; padding-top: 70px; overflow-x: hidden}
     transition: transform 0.5s;
     -webkit-transform: translate3d(0,0,0);
     transform: translate3d(0,0,0);
+    will-change: transform;
 }
 
 .slide_from_left_to_right [ng-view].ng-enter  {
     -webkit-transform: translate3d(100%,0,0);
     transform: translate3d(100%,0,0);
+    will-change: transform;
 }
 
 .slide_from_left_to_right [ng-view].ng-enter.ng-enter-active, .slide_from_right_to_left.ng-leave {
     position: absolute;
     -webkit-transform: translate3d(0,0,0);
     transform: translate3d(0,0,0);
+    will-change: transform;
 }
 
 .slide_from_left_to_right [ng-view].ng-leave.ng-leave-active  {
     -webkit-transform: translate3d(-100%,0,0);
     transform: translate3d(-100%,0,0);
+    will-change: transform;
 }
 
  .slide_from_right_to_left [ng-view]{
@@ -130,20 +139,24 @@ body { padding-right: 0 !important; padding-top: 70px; overflow-x: hidden}
    transition: transform 0.5s;
    -webkit-transform: translate3d(0,0,0);
    transform: translate3d(0,0,0);
+   will-change: transform;
 }
 
 .slide_from_right_to_left [ng-view].ng-enter  {
     -webkit-transform: translate3d(-100%,0,0);
     transform: translate3d(-100%,0,0);
+    will-change: transform;
 }
 
 .slide_from_right_to_left [ng-view].ng-enter.ng-enter-active, .slide_from_left_to_right.ng-leave {
     position: absolute;
     -webkit-transform: translate3d(0,0,0);
     transform: translate3d(0,0,0);
+    will-change: transform;
 }
 
 .slide_from_right_to_left [ng-view].ng-leave.ng-leave-active  {
     -webkit-transform: translate3d(100%,0,0);
     transform: translate3d(100%,0,0);
+    will-change: transform;
 }

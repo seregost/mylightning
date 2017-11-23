@@ -17,7 +17,7 @@
     */
     $scope.$on('server:message', (tmp, data) => {
       if(data.method == "refresh") {
-        vm.refresh();
+        setInterval(() => {vm.refresh()}, 2000);
       }
       else if(data.method == "newtransactions") {
         // Wait a little bit to allow payments to settle.  Then refresh our data.
@@ -38,7 +38,7 @@
         vm.user = user;
         return lightningService.getTransactions();
       }).then((transactions) => {
-        vm.transactions = transactions;
+        vm.transactions = transactions.slice(0,20);;
         vm.transactions.forEach((value) => {
           var monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
             "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
@@ -48,13 +48,28 @@
           value.month = monthNames[time_stamp.getMonth()];
           value.day = time_stamp.getDate();
 
-          if(value.amount > 0) {
-            value.desc = "Received Bitcoin"
-            value.desc_sub = "From Bitcoin address"
+          if(value.type=="transaction") {
+            value.icon = "icons/bitcoin.png";
+            if(value.amount > 0) {
+              value.desc = "Received Bitcoin"
+              value.desc_sub = "From Bitcoin address"
+            }
+            if(value.amount < 0) {
+              value.desc = "Sent Bitcoin"
+              value.desc_sub = "To Bitcoin address"
+            }
           }
-          if(value.amount < 0) {
+          else if(value.type=="payment") {
+            value.icon = "icons/lightning.png";
             value.desc = "Sent Bitcoin"
-            value.desc_sub = "To Bitcoin address"
+            value.desc_sub = "Via Lightning network"
+          }
+          else if(value.type=="invoice") {
+            value.icon = "icons/lightning.png";
+            value.desc = "Recieved Bitcoin"
+            value.desc_sub = "Via Lightning network"
+            if(value.memo != null && value.memo.length > 0)
+              value.desc_sub = "Via Lightning for '"+value.memo+"'";
           }
         });
         vm.isloaded = true;

@@ -1,10 +1,30 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('SendQuickPayController', ['$scope', '$element', 'selectedalias', 'lightningService', 'close', function($scope, $element, selectedalias, lightningService, close) {
-    $scope.selectedalias = selectedalias;
+  .controller('SendQuickPayController', ['$scope', '$element', 'quickpaynodes', 'lightningService', 'close', function($scope, $element, quickpaynodes, lightningService, close) {
+    $scope.quickpaynodes = quickpaynodes;
+
+    $scope.selecteditem = null;
+
+    $scope.aliasoptions = {
+      minimumChars: 1,
+      data: function (term) {
+        term = term.toUpperCase();
+        return _.filter($scope.quickpaynodes, function (quickpaynode) {
+            return quickpaynode.alias.toUpperCase().startsWith(term);
+        });
+        //return _.pluck(match, 'alias');
+      },
+      containerCssClass: 'color-codes',
+      selectedTextAttr: 'alias',
+      itemTemplateUrl : 'views/alias-list-item.tpl.html',
+      itemSelected: function (item) {
+        $scope.selecteditem = item;
+      }
+    }
+
     $scope.sendquickpay = () => {
-      var dest = $scope.selectedalias.pub_key;
+      var dest = $scope.selecteditem.item.pub_key;
       var memo = $scope.quickpay.memo;
       var amount = $scope.quickpay.amount;
 
@@ -27,6 +47,7 @@
         });
       }
     }
+
     $scope.close = () => {
       closemodal();
       close($scope.quickpay, 500); // close, but give 500ms for bootstrap to animate

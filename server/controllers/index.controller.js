@@ -13,6 +13,7 @@
 
     // Function binding
     vm.refresh = refresh;
+    vm.changescreen = changescreen;
 
     vm.refresh();
 
@@ -24,7 +25,7 @@
     */
     $scope.$on('server:message', (tmp, data) => {
       if(data.method == "refresh") {
-        vm.refresh();
+        setInterval(() => {vm.refresh()}, 2000);
       }
       else if(data.method == "newtransactions") {
         var memo = " ";
@@ -72,6 +73,15 @@
       });
     }
 
+    function changescreen(screenname)
+    {
+      $scope.whichWayToMove = ''
+      $("#gohome").removeClass();
+      $("#gotransactions").removeClass();
+      $("#gosettings").removeClass();
+
+      $(screenname).attr('class', 'active');
+    }
     /**
     * Displays the alert box and then fade out after 5 seconds.
     */
@@ -90,10 +100,10 @@
       var hammertime = new Hammer(document.getElementById('container'));
 
       hammertime.on('swipeleft', function(ev) {
-          $scope.whichWayToMove = 'slide_from_left_to_right';
+        $scope.whichWayToMove = 'slide_from_left_to_right';
 
-          $location.path('/transactions');
-          $scope.$apply();
+        $location.path('/transactions');
+        $scope.$apply();
       });
       hammertime.on('swiperight', function(ev) {
         $scope.whichWayToMove = 'slide_from_right_to_left';

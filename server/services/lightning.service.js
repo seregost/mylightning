@@ -3,13 +3,12 @@
 
   angular.module('myLightning')
   .service('lightningService', ['$rootScope', '$http', function($rootScope, $http) {
-      var connection = $.connection("/signalr");
       var ls = this;
 
       ls._data = null;
       ls._server = "https://seregost.com:8443/";
 
-
+      var connection = $.connection(ls._server + "signalr");
       connection.received(function (data) {
         console.log("Running refresh");
         if(data.method == "refresh") {

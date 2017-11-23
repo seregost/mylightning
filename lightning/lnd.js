@@ -136,12 +136,18 @@ module.exports = class Lighting {
                 sortJsonArray(channels, 'channel');
                 fs.writeFileSync(dir+'channels.json', JSON.stringify(channels));
 
-                local.gettransactions((transactions) =>{
-                  sortJsonArray(transactions, 'time_stamp', 'des');
-                  transactions = transactions.slice(0,50);
-                  fs.writeFileSync(dir+'transactions.json', JSON.stringify(transactions));
+                local._gettransactions((transactions) => {
+                  local._getpayments((payments) => {
+                    local._getsettledinvoices((invoices) => {
+                      transactions = transactions.concat(payments);
+                      transactions = transactions.concat(invoices);
+                      sortJsonArray(transactions, 'time_stamp', 'des');
+                      transactions = transactions.slice(0,50);
+                      fs.writeFileSync(dir+'transactions.json', JSON.stringify(transactions));
 
-                  local._hasupdate = true;
+                      local._hasupdate = true;
+                    });
+                  });
                 });
               });
             });
@@ -247,10 +253,10 @@ module.exports = class Lighting {
     });
   }
 
-  gettransactions(callback) {
+  _gettransactions(callback) {
     this._lightning.getTransactions({}, (err, response) => {
       if(err != null) {
-        logger.error(this._userid, "lnd.gettransactions failed: " + JSON.stringify(err));
+        logger.error(this._userid, "lnd._gettransactions failed: " + JSON.stringify(err));
         callback({"error":{"message":err}});
         return;
       }
@@ -259,14 +265,66 @@ module.exports = class Lighting {
         transactions.push(
         {
           "hash": value.tx_hash,
+          "type": "transaction",
           "amount": value.amount/100000,
           "num_confirmations": value.num_confirmations,
           "time_stamp": value.time_stamp,
           "total_fees": value.total_fees/100000
         });
       });
-      logger.silly(this._userid, "lnd.gettransactions succeeded.");
+      logger.silly(this._userid, "lnd._gettransactions succeeded.");
       callback(transactions);
+    });
+  }
+
+  _getpayments(callback) {
+    this._lightning.listPayments({}, (err, response) => {
+      if(err != null) {
+        logger.error(this._userid, "lnd._getpayments failed: " + JSON.stringify(err));
+        callback({"error":{"message":err}});
+        return;
+      }
+      var payments = [];
+      response.payments.forEach((value) => {
+        payments.push(
+        {
+          "hash": value.payment_hash,
+          "type": "payment",
+          "amount": value.value/100000,
+          "num_confirmations": 0,
+          "time_stamp": value.creation_date,
+          "total_fees": value.fee/100000
+        });
+      });
+      logger.silly(this._userid, "lnd._getpayments succeeded.");
+      callback(payments);
+    });
+  }
+
+  _getsettledinvoices(callback) {
+    this._lightning.listInvoices({}, (err, response) => {
+      if(err != null) {
+        logger.error(this._userid, "lnd._getsettledinvoices failed: " + JSON.stringify(err));
+        callback({"error":{"message":err}});
+        return;
+      }
+      var invoices = [];
+      response.invoices.forEach((value) => {
+        if(value.settled == true) {
+          invoices.push(
+          {
+            "hash": value.r_hash,
+            "type": "invoice",
+            "amount": value.value/100000,
+            "num_confirmations": 0,
+            "time_stamp": value.creation_date,
+            "total_fees": 0,
+            "memo": value.memo
+          });
+          logger.silly(this._userid, "Found settled invoice.");
+        }
+      });
+      callback(invoices);
     });
   }
 

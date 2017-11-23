@@ -31,7 +31,7 @@
     */
     $scope.$on('server:message', (tmp, data) => {
       if(data.method == "refresh") {
-        vm.refresh();
+        setInterval(() => {vm.refresh()}, 2000);
       }
       else if(data.method == "newtransactions") {
         // Wait a little bit to allow payments to settle.  Then refresh our data.
@@ -60,7 +60,7 @@
         templateUrl: "modals/sendquickpay.html",
         controller: "SendQuickPayController",
         inputs: {
-          selectedalias: vm.selectedalias
+          quickpaynodes: vm.quickpaynodes
         }
       }).then(function(modal) {
           modal.element.modal();
