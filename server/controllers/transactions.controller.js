@@ -38,7 +38,7 @@
         vm.user = user;
         return lightningService.getTransactions();
       }).then((transactions) => {
-        vm.transactions = transactions.slice(0,20);;
+        vm.transactions = transactions.slice(0,15);;
         vm.transactions.forEach((value) => {
           var monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
             "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
@@ -51,23 +51,19 @@
           if(value.type=="transaction") {
             value.icon = "icons/bitcoin.png";
             if(value.amount > 0) {
-              value.desc = "Received Bitcoin"
-              value.desc_sub = "From Bitcoin address"
+              value.class = "btn-success";
             }
             if(value.amount < 0) {
-              value.desc = "Sent Bitcoin"
-              value.desc_sub = "To Bitcoin address"
+              value.class = "btn-danger"
             }
           }
           else if(value.type=="payment") {
             value.icon = "icons/lightning.png";
-            value.desc = "Sent Bitcoin"
-            value.desc_sub = "Via Lightning network"
+            value.class = "btn-danger"
           }
           else if(value.type=="invoice") {
             value.icon = "icons/lightning.png";
-            value.desc = "Recieved Bitcoin"
-            value.desc_sub = "Via Lightning network"
+            value.class = "btn-success";
             if(value.memo != null && value.memo.length > 0)
               value.desc_sub = "Via Lightning for '"+value.memo+"'";
           }

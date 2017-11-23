@@ -42,7 +42,7 @@ module.exports = class UserManager {
         logger.info(userid, "User record updated.");
     }
     this._usersById[userid] = user;
-    fs.writeFileSync(this._userdb, JSON.stringify(this._usersById))
+    fs.writeFileSync(this._userdb, JSON.stringify(this._usersById, null, 2))
 
     return this._usersById[userid];
   }
@@ -60,7 +60,7 @@ module.exports = class UserManager {
 
   deleteuser (userid) {
     delete this._usersById[userid];
-    fs.writeFileSync(this._userdb, JSON.stringify(this._usersById))
+    fs.writeFileSync(this._userdb, JSON.stringify(this._usersById, null, 2))
     logger.info(userid, "User deleted from system.");
 
     return true;

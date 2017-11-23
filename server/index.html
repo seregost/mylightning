@@ -34,6 +34,7 @@
   <script src="js/jsqrcode-combined.min.js"></script>
   <script src="js/html5-qrcode.min.js"></script>
   <script src="js/hammer.min.js"></script>
+  <script src="js/hammer-time.min.js"></script>
   <script src="js/angular-auto-complete.js"></script>
 
   <!-- Angular control -->
@@ -58,7 +59,7 @@
 </head>
 
 <body>
-  <div id="container" ng-controller="MainController as main">
+  <div id="container" ng-controller="MainController as main" style="touch-action: none;">
     <nav class="navbar navbar-fixed-top navbar-default">
       <div class="container-fluid">
         <div class="navbar-header" nowrap>

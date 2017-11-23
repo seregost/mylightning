@@ -119,6 +119,14 @@ app.get('/auth/google/callback',
     res.redirect('/');
 });
 
+app.get('/newaccount', function(req, res){
+  res.sendfile("./server/views/newaccount.html");
+});
+
+app.get('/mobileapp', function(req, res){
+  res.sendfile("./mobileapp/mylightning.apk");
+});
+
 // TODO: Possibly due some QoS on this to avoid spam?
 app.post('/rest/v1/requestinvoice', function (req, res) {
   try {
@@ -160,7 +168,7 @@ app.use('*', function(req, res, next) {
   if(req.isAuthenticated())
   {
     if(userManager.getuser(req.user.id).rpcport == null) {
-      res.sendStatus(401);
+      res.redirect('/newaccount')
     }
     else
       next();

@@ -46,6 +46,9 @@
         });
       }
 
+      ls.getServer = function() {
+        return ls._server;
+      }
       ls.getInfo = function() {
           return new Promise((resolve) => resolve(ls._data.info));
       };

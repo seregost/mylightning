@@ -4,5 +4,6 @@
   "webport": 8443,
   "rpcserver": "dadserver",
   "netip": "dadserver",
-  "cert": "./certs/tls.cert"
+  "cert": "./certs/tls.cert",
+  "unitrate": 1000
 }

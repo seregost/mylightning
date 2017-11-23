@@ -48,7 +48,7 @@ module.exports = class Lighting {
       {
         "type": "Invoice",
         "memo": message.memo,
-        "value": message.value/100000,
+        "value": message.value/config.get("unitrate"),
         "payment_request": message.payment_request
       });
       logger.verbose(this._userid, "Detected a new payment.")
@@ -75,7 +75,7 @@ module.exports = class Lighting {
           {
             "channelid": value.chan_id,
             "channelpoint": value.chan_point,
-            "capacity": parseInt(value.capacity)/100000,
+            "capacity": parseInt(value.capacity)/config.get("unitrate"),
             "remotenode": value.connecting_node
           });
           shouldrefresh = true;
@@ -127,8 +127,8 @@ module.exports = class Lighting {
           local.getbalance((balance) => {
             local.getfunds((funds) => {
               var balances = {
-                "btcfunds": balance+funds,
-                "lntfunds": funds
+                "btcfunds": (balance+funds)/config.get("unitrate"),
+                "lntfunds": funds/config.get("unitrate")
               };
               fs.writeFileSync(dir+'balances.json', JSON.stringify(balances));
 
@@ -266,10 +266,10 @@ module.exports = class Lighting {
         {
           "hash": value.tx_hash,
           "type": "transaction",
-          "amount": value.amount/100000,
+          "amount": value.amount/config.get("unitrate"),
           "num_confirmations": value.num_confirmations,
           "time_stamp": value.time_stamp,
-          "total_fees": value.total_fees/100000
+          "total_fees": value.total_fees/config.get("unitrate")
         });
       });
       logger.silly(this._userid, "lnd._gettransactions succeeded.");
@@ -290,10 +290,10 @@ module.exports = class Lighting {
         {
           "hash": value.payment_hash,
           "type": "payment",
-          "amount": value.value/100000,
+          "amount": value.value/config.get("unitrate"),
           "num_confirmations": 0,
           "time_stamp": value.creation_date,
-          "total_fees": value.fee/100000
+          "total_fees": value.fee/config.get("unitrate")
         });
       });
       logger.silly(this._userid, "lnd._getpayments succeeded.");
@@ -313,9 +313,9 @@ module.exports = class Lighting {
         if(value.settled == true) {
           invoices.push(
           {
-            "hash": value.r_hash,
+            "hash": value.payment_request,
             "type": "invoice",
-            "amount": value.value/100000,
+            "amount": value.value/config.get("unitrate"),
             "num_confirmations": 0,
             "time_stamp": value.creation_date,
             "total_fees": 0,
@@ -341,8 +341,8 @@ module.exports = class Lighting {
           "node": value.remote_pubkey,
           "channel": value.chan_id,
           "state": "Open",
-          "balance": value.local_balance/100000,
-          "capacity": value.capacity/100000,
+          "balance": value.local_balance/config.get("unitrate"),
+          "capacity": value.capacity/config.get("unitrate"),
           "channelpoint": value.channel_point
         });
       });
@@ -358,8 +358,8 @@ module.exports = class Lighting {
             "node": value.channel.remote_node_pub,
             "channel": "N/A",
             "state": "Pending ("+value.blocks_till_open+" blocks)",
-            "balance": value.channel.local_balance/100000,
-            "capacity": value.channel.capacity/100000,
+            "balance": value.channel.local_balance/config.get("unitrate"),
+            "capacity": value.channel.capacity/config.get("unitrate"),
             "channelpoint": value.channel.channel_point
           });
         });
@@ -369,8 +369,8 @@ module.exports = class Lighting {
             "node": value.channel.remote_node_pub,
             "channel": "N/A",
             "state": "Closing",
-            "balance": value.channel.local_balance/100000,
-            "capacity": value.channel.capacity/100000,
+            "balance": value.channel.local_balance/config.get("unitrate"),
+            "capacity": value.channel.capacity/config.get("unitrate"),
             "channelpoint": value.channel.channel_point
           });
         });
@@ -380,8 +380,8 @@ module.exports = class Lighting {
             "node": value.channel.remote_node_pub,
             "channel": "N/A",
             "state": "Forced Closing ("+value.blocks_til_maturity+" blocks)",
-            "balance": value.channel.local_balance/100000,
-            "capacity": value.channel.capacity/100000,
+            "balance": value.channel.local_balance/config.get("unitrate"),
+            "capacity": value.channel.capacity/config.get("unitrate"),
             "channelpoint": value.channel.channel_point
           });
         });
@@ -394,7 +394,7 @@ module.exports = class Lighting {
   sendpayment(pub_key, amt, r_hash, callback) {
     var dest = ByteBuffer.fromHex(pub_key);
     var payhash = ByteBuffer.fromHex(r_hash);
-    var call = this._lightning.SendPaymentSync({"dest": dest, "amt": (amt*100000), "payment_hash_string": r_hash}, (err, response) => {
+    var call = this._lightning.SendPaymentSync({"dest": dest, "amt": (amt*config.get("unitrate")), "payment_hash_string": r_hash}, (err, response) => {
       if(err != null) {
         logger.error(this._userid, "lnd.sendpayment failed: " + JSON.stringify(err));
         callback({"error":{"message":err}});
@@ -436,7 +436,7 @@ module.exports = class Lighting {
         if(alias != null) {
           this._quickpaynodes[response.destination] = {"alias": alias, "server": nodepath[1]};
           var dir = './db/'+this._userid+'/';
-          fs.writeFileSync(dir+'quickpaynodes.json', JSON.stringify(this._quickpaynodes));
+          fs.writeFileSync(dir+'quickpaynodes.json', JSON.stringify(this._quickpaynodes, null, 2));
           logger.verbose(this._userid, "lnd.sendinvoice added new quickpaynode for pub_key: " + response.destination);
           dopayment();
         }
@@ -484,7 +484,7 @@ module.exports = class Lighting {
   }
 
   createinvoice(memo, amount, quickpay, callback) {
-    this._lightning.AddInvoice({"memo": memo, "value": (amount*100000)}, (err, response) => {
+    this._lightning.AddInvoice({"memo": memo, "value": (amount*config.get("unitrate"))}, (err, response) => {
       if(err != null) {
         logger.error(this._userid, "lnd.createinvoice failed: " + JSON.stringify(err));
         callback({"error":{"message":err.message}});
@@ -534,10 +534,10 @@ module.exports = class Lighting {
             callback({"error":{"message":"No peer found, so must specify a host name."}});
           }
           else
-            this._opennewpeer(nodepath[0],nodepath[1],(amount*100000),callback)
+            this._opennewpeer(nodepath[0],nodepath[1],(amount*config.get("unitrate")),callback)
         }
         else {
-          this._opennewchannel(peerid, nodepath[0], (amount*100000),callback)
+          this._opennewchannel(peerid, nodepath[0], (amount*config.get("unitrate")),callback)
         }
       }
     })

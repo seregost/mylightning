@@ -4,10 +4,16 @@ angular.module("myLightning", ['angularModalService', "ngRoute", 'ngAnimate', 'a
   $routeProvider
   .when("/", {
     templateUrl : "views/home.html",
-    controller: "HomeController"
+    controller: "HomeController",
+    reloadOnSearch: false
   })
   .when("/transactions", {
     templateUrl : "views/transactions.html",
-    controller: "TransactionController"
+    controller: "TransactionController",
+    reloadOnSearch: false
+  })
+  .when("/newaccount", {
+    templateUrl : "newaccount.html",
+    reloadOnSearch: false
   });
 }]);

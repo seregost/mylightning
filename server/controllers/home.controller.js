@@ -182,7 +182,7 @@
 
         return lightningService.getBalances();
       }).then((response) => {
-        vm.balances = {"btcfunds": response.btcfunds/100000, "lntfunds": response.lntfunds/100000};
+        vm.balances = {"btcfunds": response.btcfunds, "lntfunds": response.lntfunds};
         return lightningService.getUsers()
       }).then((response) => {
         vm.user = response;

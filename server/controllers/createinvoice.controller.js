@@ -20,7 +20,7 @@
             $scope.createinvoice.haserror = false;
             $scope.createinvoice.codeready = true;
 
-            $('#invoice-image').show().attr('src', "rest/v1/getqrimage?inputcode=" + response.data.payment_request);
+            $('#invoice-image').show().attr('src', lightningService.getServer() + "rest/v1/getqrimage?inputcode=" + response.data.payment_request);
             $scope.createinvoice.invoicecode = response.data.payment_request;
           }
           else {
