@@ -7,7 +7,7 @@
     $scope.selecteditem = null;
 
     $scope.aliasoptions = {
-      minimumChars: 1,
+      minimumChars: 0,
       data: function (term) {
         term = term.toUpperCase();
         return _.filter($scope.quickpaynodes, function (quickpaynode) {

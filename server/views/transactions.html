@@ -7,11 +7,11 @@
             <b><h4 ng-cloak><img ng-src="{{vm.user.photo}}" ng-cloak class="img-circle special-img" style="border: 1px solid; -webkit-border-radius: 10px;-moz-border-radius: 10px;border-radius: 10px;top:-10px;width: 40px; height: 40px;"/>
               My Latest Transactions<h4></b>
           </div>
-          <div class="panel-body">
-            <div ng-cloak ng-repeat="u in vm.transactions" class="panel panel-default shadow">
+          <div class="panel-body" style="padding:0px !important">
+            <div ng-cloak ng-repeat="u in vm.transactions" class="panel panel-default shadow" style="margin-bottom:0px;margin-top:4px;margin-left:2px;margin-right:2px;border-radius:0px">
               <div class="panel-body transactions">
                 <div class="row">
-                  <div class="col-xs-4 col-sm-2 col-md-2 col-lg-1 ">
+                  <div class="col-xs-5 col-sm-2 col-md-2 col-lg-1 ">
                     <ul class="list-inline">
                       <li class="text-right" >
                         <img src="{{u.icon}}" style="vertical-align:bottom;width: 20px; height: 20px;"/>
@@ -21,13 +21,13 @@
                       </li>
                     </ul>
                   </div>
-                  <div class="col-xs-8 col-sm-3 col-md-2 col-lg-1 text-right" style="font-size:1.1em;">
+                  <div class="col-xs-7 col-sm-3 col-md-2 col-lg-1 text-right" style="font-size:1.1em;">
                     <span class="label {{u.class}}">{{u.amount | number: 2}}</span> <span class="label label-warning">{{u.total_fees  | number: 2}}</span>
                   </div>
                   <div class="col-xs-12 col-sm-6 col-md-8 col-lg-10" style="font-size:1.0em;overflow:hidden;white-space: nowrap !important; text-overflow: ellipsis;">
                     <strong class="h5">{{u.memo}}</strong>
                   </div>
-                  <div class="col-xs-12 col-sm-6 col-md-8 col-lg-10" style="font-size:1.0em;overflow:hidden;white-space: nowrap !important; text-overflow: ellipsis;">
+                  <div class="col-xs-12 col-sm-7 col-md-8 col-lg-10" style="font-size:1.0em;overflow:hidden;white-space: nowrap !important; text-overflow: ellipsis;">
                     <span class="small mono">{{u.hash}}</class><br>
                   </div>
                 </div>

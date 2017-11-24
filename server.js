@@ -3,7 +3,6 @@
 const express = require("express");
 const https = require('https');
 const fs = require('fs');
-const signaljrs = require('signalrjs');
 const config = require('config');
 const Lightning = require("./lightning/"+config.get("lightning-node"));
 const session = require('express-session');
@@ -27,6 +26,7 @@ var db = levelup(leveldown('./mydb'))
 var userManager = new UserManager("users")
 var lightningnodes = {};
 
+// Start lightning daemons.
 userManager.each((userid, user) => {
   var rpcport = user.rpcport;
   var peerport = user.peerport;
@@ -35,7 +35,7 @@ userManager.each((userid, user) => {
 });
 
 // Add new user.
-function addUser (userid, sourceUser) {
+function addUser(userid, sourceUser) {
   var user;
   if(usersById[userid] == null) {
     user = usersById[userid] = {id: userid, displayName: sourceUser.displayName};
@@ -45,6 +45,7 @@ function addUser (userid, sourceUser) {
   return usersById[userid];
 }
 
+// Setup passport authentication strategies.
 passport.use(new googleStrategy({
     clientID: "173191518858-6ublcr56m3eclo1lfu2p68qfp8otd58s.apps.googleusercontent.com",
     clientSecret: "5iMWu0ZvP18gV8V4YrQRyr34",
@@ -78,7 +79,6 @@ passport.deserializeUser(function(obj, cb) {
 });
 
 var app = express();
-var signalR = signaljrs();
 
 logger.info("Configuring express");
 const sessionParser = session({
@@ -93,15 +93,9 @@ app
   .use(bodyParser.json()) // support json encoded bodies
   .use(bodyParser.urlencoded({ extended: true })) // support encoded bodies
   .use(cookieParser('htuayreve'))
-  .use(sessionParser);
-
-// Initialize Passport and restore authentication state, if any, from the
-// session.
-app.use(passport.initialize());
-app.use(passport.session());
-
-// Initialize Signal R
-app.use(signalR.createListener());
+  .use(sessionParser)
+  .use(passport.initialize())
+  .use(passport.session());
 
 // Add google auth handlers.
 app.get('/auth/google',
@@ -131,11 +125,12 @@ app.get('/newaccount', function(req, res){
   res.sendfile("./server/views/newaccount.html");
 });
 
+// Accessed to mobile app package.
 app.get('/mobileapp', function(req, res){
   res.sendfile("./mobileapp/mylightning.apk");
 });
 
-// TODO: Possibly due some QoS on this to avoid spam?
+// TODO: Possibly do some QoS on this to avoid spam?
 app.post('/rest/v1/requestinvoice', function (req, res) {
   try {
 
@@ -170,12 +165,13 @@ app.post('/rest/v1/requestinvoice', function (req, res) {
   }
 })
 
-// Blanketly require authentication before using any other resources.
+// Blanketly require authentication beyond this point before using any other resources.
 app.use('*', function(req, res, next) {
   logger.silly("Attempting session authorization.")
   if(req.isAuthenticated())
   {
     if(userManager.getuser(req.user.id).rpcport == null) {
+      // Redirect to new account if ports aren't set up.
       res.redirect('/newaccount')
     }
     else
