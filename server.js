@@ -7,6 +7,7 @@ const signaljrs = require('signalrjs');
 const config = require('config');
 const Lightning = require("./lightning/"+config.get("lightning-node"));
 const session = require('express-session');
+const LevelStore = require('express-session-level')(session);
 const bodyParser = require('body-parser');
 const cookieParser  = require('cookie-parser');
 const lightningmodule = require("./lightning/"+config.get("lightning-node"));
@@ -16,6 +17,12 @@ const googleTokenStrategy = require('passport-google-id-token');
 const logger = require("./logger");
 const qr = require('qr-image');
 const UserManager = require('./utilities/usermanager.js');
+const levelup = require('levelup')
+const leveldown = require('leveldown')
+const WebSocket = require('ws');
+
+// Initialize levelDB storage
+var db = levelup(leveldown('./mydb'))
 
 var userManager = new UserManager("users")
 var lightningnodes = {};
@@ -26,7 +33,6 @@ userManager.each((userid, user) => {
   logger.info(userid, "Started listener on behalf of '" + user.displayName + "' on port " + rpcport);
   lightningnodes[userid] = new Lightning(userid, rpcport, peerport);
 });
-
 
 // Add new user.
 function addUser (userid, sourceUser) {
@@ -42,7 +48,7 @@ function addUser (userid, sourceUser) {
 passport.use(new googleStrategy({
     clientID: "173191518858-6ublcr56m3eclo1lfu2p68qfp8otd58s.apps.googleusercontent.com",
     clientSecret: "5iMWu0ZvP18gV8V4YrQRyr34",
-    callbackURL: "https://seregost.com:8443/auth/google/callback"
+    callbackURL: "https://localhost:8444/auth/google/callback"
   },
   function(accessToken, refreshToken, profile, cb) {
     logger.info(profile.id, "Google login attempt for profile: " + profile.displayName);
@@ -75,17 +81,19 @@ var app = express();
 var signalR = signaljrs();
 
 logger.info("Configuring express");
-app
-  .use(bodyParser.json()) // support json encoded bodies
-  .use(bodyParser.urlencoded({ extended: true })) // support encoded bodies
-  .use(cookieParser('htuayreve'));
-
-app.use(session({
-  secret: 'keyboard cat',
+const sessionParser = session({
+  secret: 'ieowieow',
+  store: new LevelStore(db),
   resave: true,
   saveUninitialized: true,
   cookie: { secure: true }
-}));
+})
+
+app
+  .use(bodyParser.json()) // support json encoded bodies
+  .use(bodyParser.urlencoded({ extended: true })) // support encoded bodies
+  .use(cookieParser('htuayreve'))
+  .use(sessionParser);
 
 // Initialize Passport and restore authentication state, if any, from the
 // session.
@@ -323,9 +331,6 @@ app.get('/rest/v1/getqrimage', function (req, res) {
   }
 })
 
-///////////////
-// Data Services.
-
 /**
 * Get all quick data for a user in one go.
 */
@@ -335,22 +340,22 @@ app.get('/rest/v1/getalldata', function (req, res) {
 
     var dir = './db/'+req.user.id+'/';
     readjson(dir+'address.json').then((data) => {
-      datapackage.address = JSON.parse(data);
+      datapackage.address = data;
       return readjson(dir+'info.json');
     }).then((data) => {
-      datapackage.info = JSON.parse(data);
+      datapackage.info = data;
       return readjson(dir+'balances.json');
     }).then((data) => {
-      datapackage.balances = JSON.parse(data);
+      datapackage.balances = data;
       return readjson(dir+'channels.json');
     }).then((data) => {
-      datapackage.channels = JSON.parse(data);
+      datapackage.channels = data;
       return readjson(dir+'quickpaynodes.json');
     }).then((data) => {
-      datapackage.quickpaynodes = JSON.parse(data);
+      datapackage.quickpaynodes = data;
       return readjson(dir+'transactions.json');
     }).then((data) => {
-      datapackage.transactions = JSON.parse(data);
+      datapackage.transactions = data;
       res.send(datapackage);
     }).catch((error) => {
       logger.error(req.user.id, "Exception occurred in /rest/v1/getalldata: " + error);
@@ -417,12 +422,16 @@ function readjson(path)
   return new Promise((resolve, reject) => {
     if(!fs.existsSync(path)) {
       logger.debug("Tried to fetch a file that doesn't exist: " + path);
-      resolve(null);
+      resolve(JSON.parse("{}"));
     }
     else {
       fs.readFile(path, 'utf8', function (err, data) {
         if (err) reject(err);
-        resolve(data);
+
+        if(data.length == 0)
+          data = "{}";
+
+        resolve(JSON.parse(data));
       });
     }
   });
@@ -435,45 +444,71 @@ var sslOptions = {
   key: fs.readFileSync('./certs/key.pem'),
   cert: fs.readFileSync('./certs/cert.pem')
 };
-https.createServer(sslOptions, app).listen(8443)
-logger.info("Started express server on port 8443");
 
-signalR.on('CONNECTED',function(){
-    logger.info("New client connection detected.");
-    setInterval(function () {
-      try {
-        var keys = Object.keys(lightningnodes);
-        for(var i=0;i<keys.length;i++){
-            var userid = keys[i];
-            var lightning = lightningnodes[userid]
+var httpsServer = https.createServer(sslOptions, app).listen(config.get("webport"));
+logger.info("Started express server on port "+config.get("webport"));
 
-            var newtransactions = lightning.newtransactions();
-            if(newtransactions.length > 0)
-            {
-              var message = {"method": "newtransactions", "params": newtransactions};
-              signalR.sendToUser(userid, message);
-              logger.silly(userid, "New transactions sent.");
-            }
+// Create an instance of websocket server.
+var wss = new WebSocket.Server({
+  verifyClient: (info, done) => {
+    sessionParser(info.req, {}, () => {
+      if(info.req.session.passport == null) {
+        logger.error("Login attempt with invalid session.")
+        done(false);
+      }
+      else {
+        done(info.req.session);
+      }
+    });
+  },
+  server: httpsServer
+});
+logger.info("New websocket server created and awaiting connections.");
 
-            var newchannels = lightning.newchannels();
-            if(newchannels.length > 0)
-            {
-              var message = {"method": "newchannels", "params": newchannels};
-              signalR.sendToUser(userid, message);
-              logger.silly(userid, "New channels sent.");
-            }
+wss.on('connection', (ws) => {
+  var userid = null;
 
-            if(lightning.shouldupdate() == true)
-            {
-              var message = {"method": "refresh", "params": []};
-              signalR.sendToUser(userid, message);
-              logger.silly(userid, "New refresh sent.");
-            }
+  var id = setInterval(() => {
+    try {
+      if(userid != null) {
+        var lightning = lightningnodes[userid]
+
+        var newtransactions = lightning.newtransactions();
+        if(newtransactions.length > 0)
+        {
+          var message = {"method": "newtransactions", "params": newtransactions};
+          ws.send(JSON.stringify(message));
+          logger.silly(userid, "New transactions sent.");
+        }
+
+        var newchannels = lightning.newchannels();
+        if(newchannels.length > 0)
+        {
+          var message = {"method": "newchannels", "params": newchannels};
+          ws.send(JSON.stringify(message));
+          logger.silly(userid, "New channels sent.");
+        }
+
+        if(lightning.shouldupdate() == true)
+        {
+          var message = {"method": "refresh", "params": []};
+          ws.send(JSON.stringify(message));
+          logger.silly(userid, "New refresh sent.");
         }
       }
-      catch (e) {
-        logger.error("SignalR refresh cycle failed with error: " + e.message);
-      }
-    }, 1000)
+    }
+    catch (e) {
+      logger.error(userid, "Refresh cycle failed with error: " + e.message);
+    }
+  }, 1000);
+
+  ws.on('message', (message) => {
+    logger.debug(message, "UserID recieved.");
+    userid = message;
+  });
+
+  ws.on('close', function () {
+    logger.debug(userid, 'Stopping client connection.');
+    clearInterval(id);
+  });
 });
-logger.info("Started SignalR handler.");

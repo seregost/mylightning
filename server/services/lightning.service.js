@@ -4,39 +4,48 @@
   angular.module('myLightning')
   .service('lightningService', ['$rootScope', '$http', function($rootScope, $http) {
       var ls = this;
+      var id = null;
 
       ls._data = null;
-      ls._server = "https://seregost.com:8443/";
+      ls._server = "://localhost:8444/";
+      var wsc = new WebSocketClient();
+      wsc.open("wss" + ls._server);
 
-      var connection = $.connection(ls._server + "signalr");
-      connection.received(function (data) {
-        console.log("Running refresh");
+      wsc.onopen = function(e){
+        $rootScope.$broadcast("server:connected", null);
+        console.log('Connected to server');
+        if(id != null) {
+          clearInterval(id);
+        }
+        ls.waitSync().then(() => {
+          wsc.send(ls._data.user.id);
+        });
+      }
+
+      wsc.onmessage = function(evt,number){
+        var data = JSON.parse(evt.data);
         if(data.method == "refresh") {
           // invalidate cache
+          console.log("Running periodic refresh.")
+          ls._data = null;
+        }
+        if(data.method == "newtransactions") {
+          // invalidate cache
+          console.log("Updating data due to new transactions.")
           ls._data = null;
         }
         $rootScope.$broadcast("server:message", data);
-      });
+      }
 
-      connection.stateChanged(function (change) {
-          if (change.newState === $.signalR.connectionState.reconnecting) {
-            $rootScope.$broadcast("server:disconnected", null);
-          }
-      });
-
-      connection.error(function(error) {
-          console.warn(error);
-      });
-
-      connection.start().done(function() {
-          console.log("connection started!");
-      });
+      wsc.onclose = function(evt) {
+        $rootScope.$broadcast("server:disconnected", evt);
+      }
 
       ls.waitSync = function() {
         return new Promise((resolve) => {
           if(ls._data == null)
           {
-            $http.get(ls._server + 'rest/v1/getalldata').then((response) => {
+            $http.get("https" + ls._server + 'rest/v1/getalldata').then((response) => {
               ls._data = response.data;
               resolve();
             });
@@ -47,7 +56,7 @@
       }
 
       ls.getServer = function() {
-        return ls._server;
+        return "https" + ls._server;
       }
       ls.getInfo = function() {
           return new Promise((resolve) => resolve(ls._data.info));
@@ -78,23 +87,23 @@
       };
 
       ls.execQuickPay = function(dest, amount, memo) {
-        return $http.post(ls._server + 'rest/v1/quickpay', {"dest": dest, "memo": memo, "amount": parseFloat(amount)});
+        return $http.post("https" + ls._server + 'rest/v1/quickpay', {"dest": dest, "memo": memo, "amount": parseFloat(amount)});
       };
 
       this.execCreateInvoice = function(amount, memo, quickpay) {
-        return $http.post(this._server + 'rest/v1/createinvoice', {"memo": memo, "amount": parseFloat(amount), "quickpay": quickpay});
+        return $http.post("https" + this._server + 'rest/v1/createinvoice', {"memo": memo, "amount": parseFloat(amount), "quickpay": quickpay});
       };
 
       this.execSendInvoice = function(invoiceid, alias) {
-        return $http.post(this._server + 'rest/v1/sendinvoice', {"invoiceid": invoiceid, "alias": alias});
+        return $http.post("https" + this._server + 'rest/v1/sendinvoice', {"invoiceid": invoiceid, "alias": alias});
       };
 
       this.execOpenChannel = function(remotenode, amount) {
-        return $http.post(this._server + 'rest/v1/openchannel', {"remotenode": remotenode, "amount": parseFloat(amount)});
+        return $http.post("https" + this._server + 'rest/v1/openchannel', {"remotenode": remotenode, "amount": parseFloat(amount)});
       };
 
       this.execCloseChannel = function(channelpoint) {
-        return $http.post(this._server + 'rest/v1/closechannel', {"channelpoint": channelpoint});
+        return $http.post("https" + this._server + 'rest/v1/closechannel', {"channelpoint": channelpoint});
       };
   }]);
 })();

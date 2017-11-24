@@ -34,7 +34,7 @@ module.exports = class Lighting {
         if (err) throw err;
         this._quickpaynodes = JSON.parse(data);
       });
-      logger.verbose(this._userid, "Loaded quickpaynodes")
+      logger.debug(this._userid, "Loaded quickpaynodes")
     }
 
     this.refreshChannels();
@@ -139,8 +139,11 @@ module.exports = class Lighting {
                 local._gettransactions((transactions) => {
                   local._getpayments((payments) => {
                     local._getsettledinvoices((invoices) => {
-                      transactions = transactions.concat(payments);
-                      transactions = transactions.concat(invoices);
+                      if(payments.error == null)
+                        transactions = transactions.concat(payments);
+                      if(invoices.error == null)
+                        transactions = transactions.concat(invoices);
+
                       sortJsonArray(transactions, 'time_stamp', 'des');
                       transactions = transactions.slice(0,50);
                       fs.writeFileSync(dir+'transactions.json', JSON.stringify(transactions));
@@ -304,7 +307,7 @@ module.exports = class Lighting {
   _getsettledinvoices(callback) {
     this._lightning.listInvoices({}, (err, response) => {
       if(err != null) {
-        logger.error(this._userid, "lnd._getsettledinvoices failed: " + JSON.stringify(err));
+        logger.debug(this._userid, "lnd._getsettledinvoices failed: " + JSON.stringify(err));
         callback({"error":{"message":err}});
         return;
       }

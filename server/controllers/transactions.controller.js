@@ -17,14 +17,14 @@
     */
     $scope.$on('server:message', (tmp, data) => {
       if(data.method == "refresh") {
-        setInterval(() => {vm.refresh()}, 2000);
+        setTimeout(() => {vm.refresh()}, 2000);
       }
       else if(data.method == "newtransactions") {
         // Wait a little bit to allow payments to settle.  Then refresh our data.
-        setInterval(() => {vm.refresh()}, 2000);
+        setTimeout(() => {vm.refresh()}, 2000);
       }
       else if(data.method == "newchannels") {
-        setInterval(() => {vm.refresh()}, 2000);
+        setTimeout(() => {vm.refresh()}, 2000);
       }
     });
 

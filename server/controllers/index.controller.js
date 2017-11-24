@@ -25,7 +25,7 @@
     */
     $scope.$on('server:message', (tmp, data) => {
       if(data.method == "refresh") {
-        setInterval(() => {vm.refresh()}, 2000);
+        setTimeout(() => {vm.refresh()}, 2000);
       }
       else if(data.method == "newtransactions") {
         var memo = " ";
@@ -33,9 +33,9 @@
           memo = " for \""+data.params[0].memo + "\" ";
 
         _displayalert("You recieved a payment" + memo + "in the amount of "+data.params[0].value.toFixed(4));
-
+        $scope.$apply();
         // Wait a little bit to allow payments to settle.  Then refresh our data.
-        setInterval(() => {vm.refresh()}, 2000);
+        setTimeout(() => {vm.refresh()}, 2000);
 
         // TODO: Close payment panel.
         data.params.forEach((value) => {
@@ -47,7 +47,8 @@
       }
       else if(data.method == "newchannels") {
         _displayalert("A new channel has been opened with the capacity of "+data.params[0].capacity.toFixed(4));
-        setInterval(() => {vm.refresh()}, 2000);
+        $scope.$apply();
+        setTimeout(() => {vm.refresh()}, 2000);
       }
     });
 
@@ -57,6 +58,21 @@
     $scope.$on('server:disconnected', (tmp, data) => {
       vm.serverdisconnected = true;
       $scope.$apply();
+    });
+
+    /**
+    * Event recieved when we detect a server re-connect.
+    */
+    $scope.$on('server:connected', (tmp, data) => {
+      vm.serverdisconnected = false;
+      $scope.$apply();
+    });
+
+    /**
+    * Event recieved when a child controller wants to show an alert.
+    */
+    $scope.$on('child:showalert', (tmp, data) => {
+      _displayalert(data);
     });
 
     /**
@@ -87,9 +103,9 @@
     */
     function _displayalert(message, time)
     {
+      $("#alertbox").finish();
       vm.alerttext = message;
-      $scope.$apply();
-      $("#alertbox").fadeIn().delay(5000).fadeOut("slow");
+      $("#alertbox").fadeIn().animate({opacity:1},2000).fadeOut();
     }
 
     /**

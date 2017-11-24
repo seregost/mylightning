@@ -36,6 +36,7 @@
   <script src="js/hammer.min.js"></script>
   <script src="js/hammer-time.min.js"></script>
   <script src="js/angular-auto-complete.js"></script>
+  <script src="js/websocketclient.js"></script>
 
   <!-- Angular control -->
   <script src="configs/routeconfig.js"></script>
@@ -82,7 +83,8 @@
     <div class="container-fluid">
       <div id="alertbox" class="alert alert-info error-container col-xs-5 col-sm-5 col-md-5 col-lg-5" style="right:20px;" hidden>
         <button type="button" class="close" data-dismiss="alert">×</button>
-        <strong><b>Congrats! </b></strong><span>{{main.alerttext}}</span>
+        <img src="./icons/info.png" style="width:16px;height:15px; vertical-align:top;"/>
+        <span>{{main.alerttext}}</span>
       </div>
       <div id="blockchain-notification" ng-cloak ng-show="!main.blockchainsynced" class="alert alert-warning">
         <h4>Please wait while synchronizing to blockchain!</h4>
@@ -95,13 +97,8 @@
           </li>
         </ul>
       </div>
-      <div ng-cloak ng-show="main.serverdisconnected" class="alert alert-danger">
-        <h4>Your connection to the server has been unexpectedly lost!</h4>
-        <ul class="list-inline compact">
-          <li class="h5">
-            <b>To continue, please <a href="#" ng-click="location.reload()">reload this page.</a></b><br>
-          </li>
-        </ul>
+      <div ng-cloak ng-show="main.serverdisconnected" class="alert alert-danger" >
+        <h4 style="margin-bottom:0px">Server connection has been lost - attempting to reconnect.</h4>
       </div>
     </div>
     <div class="{{whichWayToMove}}">

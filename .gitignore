@@ -36,6 +36,7 @@ build/Release
 node_modules/
 jspm_packages/
 db/
+mydb/
 certs/
 mobileapp/
 

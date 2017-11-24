@@ -31,14 +31,14 @@
     */
     $scope.$on('server:message', (tmp, data) => {
       if(data.method == "refresh") {
-        setInterval(() => {vm.refresh()}, 2000);
+        setTimeout(() => {vm.refresh()}, 3000);
       }
       else if(data.method == "newtransactions") {
         // Wait a little bit to allow payments to settle.  Then refresh our data.
-        setInterval(() => {vm.refresh()}, 2000);
+        setTimeout(() => {vm.refresh()}, 3000);
       }
       else if(data.method == "newchannels") {
-        setInterval(() => {vm.refresh()}, 2000);
+        setTimeout(() => {vm.refresh()}, 3000);
       }
     });
 
@@ -64,11 +64,14 @@
         }
       }).then(function(modal) {
           modal.element.modal();
+          $scope.$emit("child:showalert",
+            "Enter an alias and amount to quickly send a payment to a friend's account");
           modal.close.then(function(result) {
             vm.quickpay = result;
             if(vm.quickpay.success == true)
             {
-              _displayalert("You sent a payment to '"+vm.selectedalias.alias+"' in the amount of: "+vm.quickpay.amount.toFixed(4))
+              $scope.$emit("child:showalert",
+                "You sent a payment to '"+vm.quickpay.alias+"' in the amount of: "+vm.quickpay.amount.toFixed(4));
               vm.refresh();
             }
         });
@@ -84,6 +87,8 @@
         controller: "CreateInvoiceController",
       }).then(function(modal) {
           modal.element.modal();
+          $scope.$emit("child:showalert",
+            "To create a new invoice enter an amount and optional memo. Enabling Quick Pay will allow customers to request automatic invoices from you in the future.");
           modal.close.then(function(result) {
         });
       });
@@ -98,11 +103,14 @@
         controller: "SendPaymentController",
       }).then(function(modal) {
           modal.element.modal();
+          $scope.$emit("child:showalert",
+            "To submit your payment, please enter or scan the routing number provided by your vendor.");
           modal.close.then(function(result) {
             vm.sendpayment = result;
             if(vm.sendpayment.success == true)
             {
-              _displayalert("You have successfully paid the invoice.")
+              $scope.$emit("child:showalert",
+                "You have successfully paid the invoice.");
               vm.refresh();
             }
         });
@@ -118,6 +126,8 @@
         controller: "OpenChannelController",
       }).then(function(modal) {
           modal.element.modal();
+          $scope.$emit("child:showalert",
+            "To open a new channel, enter or scan the remote node id and amount to fund.");
           modal.close.then(function(result) {
         });
       });

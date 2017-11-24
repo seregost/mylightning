@@ -20,6 +20,7 @@
       itemTemplateUrl : 'views/alias-list-item.tpl.html',
       itemSelected: function (item) {
         $scope.selecteditem = item;
+        $scope.quickpay.alias = item.item.alias;
       }
     }
 
