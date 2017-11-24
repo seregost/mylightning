@@ -1,6 +1,6 @@
 {
   "lightning-node": "lnd",
-  "webserver": "seregost.com",
+  "webserver": "localhost",
   "webport": 8444,
   "rpcserver": "dadserver",
   "netip": "dadserver",

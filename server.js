@@ -48,7 +48,7 @@ function addUser (userid, sourceUser) {
 passport.use(new googleStrategy({
     clientID: "173191518858-6ublcr56m3eclo1lfu2p68qfp8otd58s.apps.googleusercontent.com",
     clientSecret: "5iMWu0ZvP18gV8V4YrQRyr34",
-    callbackURL: "https://localhost:8444/auth/google/callback"
+    callbackURL: "https://"+config.get("webserver")+":"+config.get("webport")+"/auth/google/callback"
   },
   function(accessToken, refreshToken, profile, cb) {
     logger.info(profile.id, "Google login attempt for profile: " + profile.displayName);
