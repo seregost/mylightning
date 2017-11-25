@@ -42,16 +42,20 @@ var app = {
     // The scope of 'this' is the event. In order to call the 'receivedEvent'
     // function, we must explicitly call 'app.receivedEvent(...);'
     onDeviceReady: function () {
+        var storage = window.localStorage;
+        storage.setItem("clientID", "173191518858-6ublcr56m3eclo1lfu2p68qfp8otd58s.apps.googleusercontent.com");
+        storage.setItem("server", "seregost.com:8443");
+
         // https://github.com/EddyVerbruggen/cordova-plugin-googleplus/blob/master/demo/cordova/index.html
         window.plugins.googleplus.login(
           {
-            'webClientId' : '173191518858-6ublcr56m3eclo1lfu2p68qfp8otd58s.apps.googleusercontent.com'
+            'webClientId' : storage.getItem("clientID")
           },
           function (obj) {
             console.log(JSON.stringify(obj));
 
             // POST to rest service to intiate session.
-            $.post("https://seregost.com:8443/auth/google", {"id_token": obj.idToken}, () =>{
+            $.post("https://"+storage.getItem("server")+"/auth/google", {"id_token": obj.idToken}, () =>{
                 // Wait to bootstrap angular until the client ID is identified.
                 console.log("Login has completed, bootstrapping AngularJS.");
                 angular.bootstrap(document.body, ['myLightning']);

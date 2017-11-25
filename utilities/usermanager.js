@@ -3,6 +3,7 @@
 const fs = require('fs');
 const logger = require("../logger");
 const sprintf = require('sprintf').sprintf;
+const bcrypt = require("bcrypt");
 
 module.exports = class UserManager {
   constructor(userdb) {
@@ -18,6 +19,7 @@ module.exports = class UserManager {
     }
   }
 
+  // TODO: Update to support admin addition of users.
   adduser(userid, sourceUser) {
     var user = this._usersById[userid];
 
@@ -47,8 +49,41 @@ module.exports = class UserManager {
     return this._usersById[userid];
   }
 
+  updatepassword(userid, password, callback) {
+    bcrypt.hash(password, 10, (err, bcryptedPassword) => {
+      if(err != null)
+        callback(null);
+
+      var user = this._usersById[userid];
+      if(user != null) {
+          user.password = bcryptedPassword;
+          this._usersById[userid] = user;
+          fs.writeFileSync(this._userdb, JSON.stringify(this._usersById, null, 2))
+
+          return callback(this._usersById[userid]);
+      }
+      else {
+          callback(null)
+      }
+    });
+  }
+
   getuser(userid) {
     return this._usersById[userid];
+  }
+
+  verifypassword(user, password, callback) {
+    bcrypt.compare(password, user.password, function(err, doesMatch){
+      if(err != null)
+        reject(err);
+
+      if (doesMatch) {
+         callback(true, user);
+      }
+      else{
+         callback(false, null);
+      }
+    });
   }
 
   each(callback) {

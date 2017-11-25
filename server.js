@@ -11,8 +11,7 @@ const bodyParser = require('body-parser');
 const cookieParser  = require('cookie-parser');
 const lightningmodule = require("./lightning/"+config.get("lightning-node"));
 const passport = require('passport');
-const googleStrategy = require('passport-google-oauth20').Strategy;
-const googleTokenStrategy = require('passport-google-id-token');
+const localStrategy = require('passport-local').Strategy;
 const logger = require("./logger");
 const qr = require('qr-image');
 const UserManager = require('./utilities/usermanager.js');
@@ -30,41 +29,46 @@ var lightningnodes = {};
 userManager.each((userid, user) => {
   var rpcport = user.rpcport;
   var peerport = user.peerport;
-  logger.info(userid, "Started listener on behalf of '" + user.displayName + "' on port " + rpcport);
-  lightningnodes[userid] = new Lightning(userid, rpcport, peerport);
+  if(rpcport != null) {
+    logger.info(userid, "Started listener on port " + rpcport);
+    lightningnodes[userid] = new Lightning(userid, rpcport, peerport);
+  }
 });
 
-// Add new user.
-function addUser(userid, sourceUser) {
-  var user;
-  if(usersById[userid] == null) {
-    user = usersById[userid] = {id: userid, displayName: sourceUser.displayName};
-    fs.writeFileSync('./db/users.json', JSON.stringify(usersById))
-    logger.info(userid, "New user added to system.");
-  }
-  return usersById[userid];
-}
+passport.use(new localStrategy(
+  function(username, password, done) {
+    process.nextTick(function() {
+      var user = userManager.getuser(username)
 
-// Setup passport authentication strategies.
-passport.use(new googleStrategy({
-    clientID: config.get("clientID"),
-    clientSecret: config.get("clientSecret"),
-    callbackURL: "https://"+config.get("webserver")+":"+config.get("webport")+"/auth/google/callback"
-  },
-  function(accessToken, refreshToken, profile, cb) {
-    logger.info(profile.id, "Google login attempt for profile: " + profile.displayName);
-    var user = userManager.adduser(profile.id, profile);
-    return cb(null, user);
-  }
-));
-
-passport.use(new googleTokenStrategy({
-    clientID: config.get("clientID")
-  },
-  function(parsedToken, googleId, done) {
-    logger.info(googleId, "Google token authentication for user id: " + googleId);
-    var user = userManager.getuser(googleId);
-    return done(null, user);
+      if(!user) {
+        logger.error(username, "Login attempt for invalid user.");
+        return done(null, false);
+      }
+      else if(!user.password) {
+        return userManager.updatepassword(username, password, (user) => {
+          if(user == null) {
+            logger.info(username, "Failed first time login.")
+            done(null, false);
+          }
+          else {
+            logger.info(username, "Successful first time login.");
+            return done(null, user);
+          }
+        });
+      }
+      else {
+        return userManager.verifypassword(user, password, (success,user) => {
+          if(success == true) {
+            logger.info(username, "Valid login for user.");
+            return done(null, user);
+          }
+          else {
+            logger.error(username, "Invalid password login attempt.");
+            return done(null, false);
+          }
+        });
+      }
+    });
   }
 ));
 
@@ -83,7 +87,7 @@ var app = express();
 logger.info("Configuring express");
 const sessionParser = session({
   secret: 'ieowieow',
-  store: new LevelStore(db),
+  // store: new LevelStore(db),
   resave: true,
   saveUninitialized: true,
   cookie: { secure: true }
@@ -97,40 +101,22 @@ app
   .use(passport.initialize())
   .use(passport.session());
 
-// Add google auth handlers.
-app.get('/auth/google',
-  passport.authenticate('google', { scope: ['profile'] }));
+app.get('/login', function(req, res){
+  res.sendfile("./server/views/login.html");
+  });
 
-app.post('/auth/google',
-  passport.authenticate('google-id-token'),
-  function (req, res) {
+app.post('/login',
+  passport.authenticate('local'),
+  function(req, res) {
     if(req.user != null) {
       logger.info(req.user.id, "Successfully authenticated.")
     }
     else {
-      logger.error("Unauthorized login attempt with invalid token id.")
+      logger.error("Unauthorized login attempt with invalid password.")
     }
     // do something with req.user
     res.sendStatus(req.user ? 200 : 401);
-});
-
-app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login' }),
-  function(req, res) {
-    // Successful authentication, redirect home.
-    res.redirect('/');
-});
-
-app.get('/newaccount', function(req, res){
-  res.sendfile("./server/views/newaccount.html");
-});
-
-// Accessed to mobile app package.
-// TODO: Should this be cloud stored?
-// Google Play will solve the problem.
-app.get('/mobileapp', function(req, res){
-  res.sendfile("./mobileapp/mylightning.apk");
-});
+  });
 
 // TODO: Do some QoS control on this to avoid spam?
 app.post('/rest/v1/requestinvoice', function (req, res) {
@@ -185,7 +171,7 @@ app.use('*', function(req, res, next) {
     }
     else
     {
-      res.redirect('/auth/google')
+      res.redirect('/login')
     }
   }
 });
@@ -194,6 +180,17 @@ logger.info("Configured authentication routes");
 
 // Allow static access to views.
 app.use(express.static(__dirname + '/server'));
+
+// Accessed to mobile app package.
+// TODO: Should this be cloud stored?
+// Google Play will solve the problem.
+app.get('/mobileapp', function(req, res){
+  res.sendfile("./mobileapp/mylightning.apk");
+});
+
+app.get('/rest/v1/ping', function (req, res) {
+  res.sendStatus(200);
+});
 
 // Rest API
 app.post('/rest/v1/sendinvoice', function (req, res) {

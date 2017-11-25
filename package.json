@@ -4,6 +4,7 @@
   "main": "main.js",
   "dependencies": {
     "angular-modal-service": "^0.13.0",
+    "bcrypt": "^1.0.3",
     "bitcoin": "^3.0.1",
     "body-parser": "^1.18.2",
     "bootstrap-table": "^1.11.2",
@@ -24,6 +25,7 @@
     "passport": "^0.4.0",
     "passport-google-id-token": "^0.4.3",
     "passport-google-oauth20": "^1.0.0",
+    "passport-local": "^1.0.0",
     "qr-image": "^3.2.0",
     "request": "^2.83.0",
     "secp256k1": "^3.3.1",

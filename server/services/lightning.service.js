@@ -8,6 +8,13 @@
 
       ls._data = null;
       ls._server = "://localhost:8444/";
+
+      var storage = window.localStorage;
+      if(storage != null && storage.getItem("server") != null)
+        ls._server = "://"+storage.getItem("server")+"/";
+      else
+        ls._server = location.origin.replace("https", "")+"/";
+
       var wsc = new WebSocketClient();
       wsc.open("wss" + ls._server);
 
