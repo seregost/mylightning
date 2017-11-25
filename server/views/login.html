@@ -19,63 +19,95 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
+  <!-- <script type="text/javascript" src="cordova.js"></script> -->
 </head>
 
 <body>
-  <div id="container">
-    <nav class="navbar navbar-default">
-      <div class="container-fluid">
-        <div class="navbar-header" nowrap>
-          <a class="navbar-brand" href="#">myLIGHTNING</a>
-        </div>
-      </div>
-    </nav>
+<div id="container">
+  <nav class="navbar navbar-default">
     <div class="container-fluid">
-      <div class="row">
-        <div class="col-xs-12 col-sm-8 col-md-6 col-lg-4 col-sm-offset-2 col-md-offset-3 col-lg-offset-4">
-          <div class="panel panel-default">
-             <div class="panel-heading">
-                <b>
-                   <h4 ng-cloak>
-                   Welcome!  Please log in to continue.
-                   <h4>
-                </b>
-             </div>
-             <div class="panel-body">
-               <div ng-cloak ng-show="main.serverdisconnected" class="alert alert-danger" id="error" hidden>
-                 Invalid login details.  If this is your first login attempt, the administrator may need to validate your email address.
-               </div>
-               <form id="loginform" name="loginform" action="">
-                 <div class="row">
-                   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                     <div class="form-group">
-                       <div class"form-control">
-                         <label for="alias">Email:</label>
-                         <input type="email" class="form-control" id="email" required />
-                       </div>
-                     </div>
-                     <div class="form-group">
-                       <div class"form-control">
-                         <label for="quickpayamount">Pin:</label>
-                         <input type="password" class="form-control" id="password" minlength="4" required/>
-                       </div>
-                     </div>
-                   </div>
-                 </div>
-                 <div class="row">
-                   <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
-                     <button type="submit" class="btn btn-success">Login</button>
-                   </div>
-                 </div>
-               </form>
-             </div>
+      <div class="navbar-header" nowrap>
+        <a class="navbar-brand" href="#">myLIGHTNING</a>
+      </div>
+    </div>
+  </nav>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-xs-12 col-sm-8 col-md-6 col-lg-4 col-sm-offset-2 col-md-offset-3 col-lg-offset-4">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <b>
+              <h4 ng-cloak>
+                Welcome!  Please log in to continue.
+                <h4>
+            </b>
+          </div>
+          <div class="panel-body">
+            <div ng-cloak ng-show="main.serverdisconnected" class="alert alert-danger" id="error" hidden>
+              Invalid login details.  If this is your first login attempt, the administrator may need to validate your email address.
+            </div>
+            <form id="loginform" name="loginform" action="">
+              <div class="row" id="collectserver" hidden>
+                <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8">
+                  <div class="form-group">
+                    <div class"form-control">
+                    <label for="server">Wallet Server:</label>
+                    <input type="text" class="form-control" id="server"/>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                <div class="form-group">
+                  <div class"form-control">
+                  <label for="port">Port:</label>
+                  <input type="number" class="form-control" id="port"/>
+                </div>
+              </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="form-group">
+              <div class"form-control">
+              <label for="email">Your Email:</label>
+              <input type="email" class="form-control" id="email" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <div class"form-control">
+            <label for="password">Your Pin:</label>
+            <input type="password" class="form-control" id="password" minlength="4" required/>
           </div>
         </div>
       </div>
     </div>
+    <div class="row">
+      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
+        <button type="submit" class="btn btn-success">Login</button>
+      </div>
+    </div>
+    </form>
   </div>
-  <script>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
     $(function() {
+      var username = window.localStorage.getItem("username")
+      $("#email").val(username)
+
+      if(window.localStorage.getItem("isPhoneGap") == "1") {
+        var url = window.localStorage.getItem("server")
+        if(url.length > 0) {
+          var server = url.split(":");
+          $("#server").val(server[0])
+          $("#port").val(server[1])
+        }
+        $("#collectserver").show();
+      }
+
       // Initialize form validation on the registration form.
       // It has the name attribute "registration"
       $("form[name='loginform']").validate({
@@ -103,13 +135,26 @@
         // Make sure the form is submitted to the destination defined
         // in the "action" attribute of the form when valid
         submitHandler: function(form) {
+          var server = ""
+
+          // If using cordova, set server.
+          if(window.localStorage.getItem("isPhoneGap") == "1") {
+            var server = $("#server").val()
+            var port = $("#port").val()
+            window.localStorage.setItem("server", server+":"+port);
+            server = "https://"+window.localStorage.getItem("server")
+          }
+
+          // Store username for future.
+          window.localStorage.setItem("username", $("#email").val());
+
           var data = {
             username: $("#email").val(),
             password: $("#password").val()
           }
-          $.post("/login", data, (result) => {
+          $.post(server+"/login", data, (result) => {
               if(result == "OK")
-                window.location.replace("/");
+                window.location.replace("../index.html");
           }).fail(() => {
             $("#error").show();
           });

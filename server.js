@@ -47,11 +47,11 @@ passport.use(new localStrategy(
       else if(!user.password) {
         return userManager.updatepassword(username, password, (user) => {
           if(user == null) {
-            logger.info(username, "Failed first time login.")
+            logger.error(username, "Failed first time login.")
             done(null, false);
           }
           else {
-            logger.info(username, "Successful first time login.");
+            logger.verbose(username, "Successful first time login.");
             return done(null, user);
           }
         });
@@ -59,7 +59,7 @@ passport.use(new localStrategy(
       else {
         return userManager.verifypassword(user, password, (success,user) => {
           if(success == true) {
-            logger.info(username, "Valid login for user.");
+            logger.verbose(username, "Valid login for user.");
             return done(null, user);
           }
           else {
@@ -87,7 +87,7 @@ var app = express();
 logger.info("Configuring express");
 const sessionParser = session({
   secret: 'ieowieow',
-  // store: new LevelStore(db),
+  store: new LevelStore(db),
   resave: true,
   saveUninitialized: true,
   cookie: { secure: true }
@@ -190,6 +190,12 @@ app.get('/mobileapp', function(req, res){
 
 app.get('/rest/v1/ping', function (req, res) {
   res.sendStatus(200);
+});
+
+// Logout of user session.
+app.post('/rest/v1/logout', function (req, res) {
+  logger.info(req.user.id, "Successful logout.");
+  req.session.destroy();
 });
 
 // Rest API

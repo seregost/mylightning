@@ -10,7 +10,7 @@
       ls._server = "://localhost:8444/";
 
       var storage = window.localStorage;
-      if(storage != null && storage.getItem("server") != null)
+      if(storage.getItem("server") != null)
         ls._server = "://"+storage.getItem("server")+"/";
       else
         ls._server = location.origin.replace("https", "")+"/";
@@ -111,6 +111,10 @@
 
       this.execCloseChannel = function(channelpoint) {
         return $http.post("https" + this._server + 'rest/v1/closechannel', {"channelpoint": channelpoint});
+      };
+
+      this.execLogout = function() {
+        return $http.post("https" + this._server + 'rest/v1/logout');
       };
   }]);
 })();

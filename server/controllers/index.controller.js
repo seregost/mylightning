@@ -14,6 +14,7 @@
     // Function binding
     vm.refresh = refresh;
     vm.changescreen = changescreen;
+    vm.dologout = dologout;
 
     vm.refresh();
 
@@ -87,6 +88,12 @@
         $scope.$apply();
         return lightningService.getBalances();
       });
+    }
+
+    function dologout()
+    {
+      lightningService.execLogout();
+      window.location.replace("/login");
     }
 
     function changescreen(screenname)
