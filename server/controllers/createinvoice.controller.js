@@ -1,7 +1,11 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('CreateInvoiceController', ['$scope', '$element', 'lightningService', 'close', function($scope, $element, lightningService, close) {
+  .controller('CreateInvoiceController', ['$scope', '$element', 'broadcastService', 'lightningService', 'close',
+  function($scope, $element, broadcastService, lightningService, close) {
+    broadcastService.send("child:showalert",
+      "To create a new invoice enter an amount and optional memo. Enabling Quick Pay will allow customers to request automatic invoices from you in the future.");
+
     $scope.createinvoice = () => {
       var amount = $scope.createinvoice.amount;
       var memo = $scope.createinvoice.memo;

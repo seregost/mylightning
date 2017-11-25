@@ -47,8 +47,8 @@ function addUser(userid, sourceUser) {
 
 // Setup passport authentication strategies.
 passport.use(new googleStrategy({
-    clientID: "173191518858-6ublcr56m3eclo1lfu2p68qfp8otd58s.apps.googleusercontent.com",
-    clientSecret: "5iMWu0ZvP18gV8V4YrQRyr34",
+    clientID: config.get("clientID"),
+    clientSecret: config.get("clientSecret"),
     callbackURL: "https://"+config.get("webserver")+":"+config.get("webport")+"/auth/google/callback"
   },
   function(accessToken, refreshToken, profile, cb) {
@@ -59,7 +59,7 @@ passport.use(new googleStrategy({
 ));
 
 passport.use(new googleTokenStrategy({
-    clientID: "173191518858-6ublcr56m3eclo1lfu2p68qfp8otd58s.apps.googleusercontent.com"
+    clientID: config.get("clientID")
   },
   function(parsedToken, googleId, done) {
     logger.info(googleId, "Google token authentication for user id: " + googleId);
@@ -126,39 +126,40 @@ app.get('/newaccount', function(req, res){
 });
 
 // Accessed to mobile app package.
+// TODO: Should this be cloud stored?
+// Google Play will solve the problem.
 app.get('/mobileapp', function(req, res){
   res.sendfile("./mobileapp/mylightning.apk");
 });
 
-// TODO: Possibly do some QoS on this to avoid spam?
+// TODO: Do some QoS control on this to avoid spam?
 app.post('/rest/v1/requestinvoice', function (req, res) {
   try {
+    var pub_key = req.body.pub_key;
 
-  var pub_key = req.body.pub_key;
+    var lightningnode = null;
+    var keys = Object.keys(lightningnodes);
+    for(var i=0;i<keys.length;i++){
+        var userid = keys[i];
+        if(lightningnodes[userid].pubkey == pub_key)
+          lightningnode = lightningnodes[userid];
+    }
+    var memo = req.body.memo;
+    var amount = req.body.amount;
 
-  var lightningnode = null;
-  var keys = Object.keys(lightningnodes);
-  for(var i=0;i<keys.length;i++){
-      var userid = keys[i];
-      if(lightningnodes[userid].pubkey == pub_key)
-        lightningnode = lightningnodes[userid];
-  }
-  var memo = req.body.memo;
-  var amount = req.body.amount;
-
-  if(lightningnode == null)
-  {
-    // No record of a user with the given pubkey.
-    logger.error(userid, "/rest/v1/requestinvoice failed.  No lightning node.")
-    res.sendStatus(404);
-  }
-  else {
-    lightningnode.createinvoice(memo, amount, false, (response) => {
-      logger.verbose(userid, "/rest/v1/requestinvoice succeeded.")
-      logger.debug(userid, JSON.stringify(response));
-      res.send(response);
-    });
-  }
+    if(lightningnode == null)
+    {
+      // No record of a user with the given pubkey.
+      logger.error(userid, "/rest/v1/requestinvoice failed.  No lightning node.")
+      res.sendStatus(404);
+    }
+    else {
+      lightningnode.createinvoice(memo, amount, false, (response) => {
+        logger.verbose(userid, "/rest/v1/requestinvoice succeeded.")
+        logger.debug(userid, JSON.stringify(response));
+        res.send(response);
+      });
+    }
   } catch (e) {
     logger.error(userid, "Exception occurred in /rest/v1/requestinvoice: " + e.message);
     res.sendStatus(500);
@@ -363,52 +364,6 @@ app.get('/rest/v1/getalldata', function (req, res) {
   }
 })
 
-app.get('/rest/v1/user', function (req, res) {
-  res.send(req.user);
-})
-
-app.get('/rest/v1/address', function (req, res) {
-  fs.readFile('./db/'+req.user.id+'/address.json', 'utf8', function (err, data) {
-    if (err) throw err;
-    res.send(JSON.parse(data));
-  });
-})
-
-app.get('/rest/v1/info', function (req, res) {
-  fs.readFile('./db/'+req.user.id+'/info.json', 'utf8', function (err, data) {
-    if (err) throw err;
-    res.send(data);
-  });
-})
-
-app.get('/rest/v1/balances', function (req, res) {
-  fs.readFile('./db/'+req.user.id+'/balances.json', 'utf8', function (err, data) {
-    if (err) throw err;
-    res.send(data);
-  });
-})
-
-app.get('/rest/v1/channels', function (req, res) {
-  fs.readFile('./db/'+req.user.id+'/channels.json', 'utf8', function (err, data) {
-    if (err) throw err;
-    res.send(data);
-  });
-})
-
-app.get('/rest/v1/quickpaynodes', function (req, res) {
-  if(!fs.existsSync('./db/'+req.user.id+'/quickpaynodes.json'))
-  {
-    res.send("{}");
-  }
-  else
-  {
-    fs.readFile('./db/'+req.user.id+'/quickpaynodes.json', 'utf8', function (err, data) {
-      if (err) throw err;
-      res.send(data);
-    });
-  }
-})
-
 app.get('*', function(req, res){
   res.sendStatus(404);
 });
@@ -499,6 +454,9 @@ wss.on('connection', (ws) => {
   }, 1000);
 
   ws.on('message', (message) => {
+    // TODO: This is a minor security problem because people could
+    // spoof user id and recieve updates for others.  Need to figure out
+    // how to get the session information passed to the web socket connect event.
     logger.debug(message, "UserID recieved.");
     userid = message;
   });

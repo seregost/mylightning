@@ -71,7 +71,7 @@
             if(vm.quickpay.success == true)
             {
               $scope.$emit("child:showalert",
-                "You sent a payment to '"+vm.quickpay.alias+"' in the amount of: "+vm.quickpay.amount.toFixed(4));
+                "You sent a payment to '"+vm.quickpay.alias+"' in the amount of: "+vm.quickpay.amount.toFixed(2));
               vm.refresh();
             }
         });
@@ -87,8 +87,6 @@
         controller: "CreateInvoiceController",
       }).then(function(modal) {
           modal.element.modal();
-          $scope.$emit("child:showalert",
-            "To create a new invoice enter an amount and optional memo. Enabling Quick Pay will allow customers to request automatic invoices from you in the future.");
           modal.close.then(function(result) {
         });
       });

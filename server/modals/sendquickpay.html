@@ -17,20 +17,20 @@
           </div> -->
           <div class="row">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
-              <div class="form-group has-feedback">
+              <div class="form-group">
                 <div class"form-control">
                   <label for="alias">Alias:</label>
                   <input type="text" class="form-control" ng-model="selectedalias" auto-complete="aliasoptions" />
                 </div>
               </div>
-              <div class="form-group has-feedback">
+              <div class="form-group">
                 <div class"form-control">
                   <label for="quickpayamount">Amount:</label>
                   <input type="number" class="form-control" name="amount" ng-model="quickpay.amount" min="0.001" required/>
                   <span style="color:red;" ng-show="quickpayform.amount.$error.min||quickpayform.amount.$error.required ">Amount must be greater than 0.001</span>
                 </div>
               </div>
-              <div class="form-group has-feedback">
+              <div class="form-group">
                 <div class"form-control">
                   <label for="quickpaymemo">Memo:</label>
                   <input type="text" class="form-control" name="memo" ng-init="quickpay.memo=''" ng-model="quickpay.memo"/>

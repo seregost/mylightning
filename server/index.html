@@ -41,6 +41,7 @@
   <!-- Angular control -->
   <script src="configs/routeconfig.js"></script>
   <script src="services/lightning.service.js"></script>
+  <script src="services/broadcast.service.js"></script>
 
   <!-- View Controllers -->
   <script src="controllers/index.controller.js"></script>
@@ -83,8 +84,16 @@
     <div class="container-fluid">
       <div id="alertbox" class="alert alert-info error-container col-xs-11 col-sm-7 col-md-7 col-lg-7" style="right:20px" hidden>
         <button type="button" class="close" data-dismiss="alert">×</button>
-        <img src="./icons/info.png" style="width:16px;height:15px; vertical-align:top;"/>
-        <span>{{main.alerttext}}</span>
+        <table style="background-color:transparent">
+          <tr>
+            <td style="width:25px">
+              <img src="./icons/info.png" style="width:15px;height:15px; vertical-align:top;"/>
+            </td>
+            <td style="padding-right:5px">
+              <span>{{main.alerttext}}</span>
+            </td>
+          </tr>
+        </table>
       </div>
       <div id="blockchain-notification" ng-cloak ng-show="!main.blockchainsynced" class="alert alert-warning">
         <h4>Please wait while synchronizing to blockchain!</h4>

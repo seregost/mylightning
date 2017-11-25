@@ -26,14 +26,14 @@
           </div>
           <div class="row">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
-              <div class="form-group has-feedback">
+              <div class="form-group">
                 <div class"form-control">
                   <label for="invoiceamount">Amount:</label>
                   <input type="number" class="form-control" ng-model="createinvoice.amount" id="amount" name="amount" min="0.001" required/>
                   <span style="color:red;" ng-show="createinvoiceform.amount.$error.min||createinvoiceform.amount.$error.required ">Amount must be greater than 0.001</span>
                 </div>
               </div>
-              <div class="form-group has-feedback">
+              <div class="form-group">
                 <div class"form-control">
                   <label for="invoicememo">Memo:</label>
                   <input type="text" class="form-control" ng-model="createinvoice.memo" id="memo" name="memo"/>

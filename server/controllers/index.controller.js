@@ -32,7 +32,7 @@
         if(data.params[0].memo.length > 0)
           memo = " for \""+data.params[0].memo + "\" ";
 
-        _displayalert("You recieved a payment" + memo + "in the amount of "+data.params[0].value.toFixed(4));
+        _displayalert("You recieved a payment" + memo + "in the amount of "+data.params[0].value.toFixed(2));
         $scope.$apply();
         // Wait a little bit to allow payments to settle.  Then refresh our data.
         setTimeout(() => {vm.refresh()}, 2000);
@@ -46,7 +46,7 @@
         });
       }
       else if(data.method == "newchannels") {
-        _displayalert("A new channel has been opened with the capacity of "+data.params[0].capacity.toFixed(4));
+        _displayalert("A new channel has been opened with the capacity of "+data.params[0].capacity.toFixed(2));
         $scope.$apply();
         setTimeout(() => {vm.refresh()}, 2000);
       }
