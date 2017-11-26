@@ -139,8 +139,8 @@
 
           // If using cordova, set server.
           if(window.localStorage.getItem("isPhoneGap") == "1") {
-            var server = $("#server").val()
-            var port = $("#port").val()
+            var server = $("#server").val().trim();
+            var port = $("#port").val().trim();
             window.localStorage.setItem("server", server+":"+port);
             server = "https://"+window.localStorage.getItem("server")
           }
@@ -149,7 +149,7 @@
           window.localStorage.setItem("username", $("#email").val());
 
           var data = {
-            username: $("#email").val(),
+            username: $("#email").val().trim().toLowerCase(),
             password: $("#password").val()
           }
           $.post(server+"/login", data, (result) => {
