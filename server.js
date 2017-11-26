@@ -102,7 +102,7 @@ app
   .use(passport.session());
 
 app.get('/login', function(req, res){
-  res.sendfile("./server/views/login.html");
+  res.sendfile("./www/views/login.html");
   });
 
 app.post('/login',
@@ -179,14 +179,7 @@ app.use('*', function(req, res, next) {
 logger.info("Configured authentication routes");
 
 // Allow static access to views.
-app.use(express.static(__dirname + '/server'));
-
-// Accessed to mobile app package.
-// TODO: Should this be cloud stored?
-// Google Play will solve the problem.
-app.get('/mobileapp', function(req, res){
-  res.sendfile("./mobileapp/mylightning.apk");
-});
+app.use(express.static(__dirname + '/www'));
 
 app.get('/rest/v1/ping', function (req, res) {
   res.sendStatus(200);

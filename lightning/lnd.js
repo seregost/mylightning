@@ -493,15 +493,7 @@ module.exports = class Lighting {
         callback({"error":{"message":err.message}});
       }
       else {
-        var dir = './db/'+this._userid+'/';
-
-        // Create invoice qr
-        var qr_svg = qr.image(""+response.payment_request, {type: 'png'});
-        qr_svg.pipe(require('fs').createWriteStream(dir + "latestinvoice.png"));
-
         var quickpay_request = ""+response.payment_request+"@"+config.get("webserver")+":"+config.get("webport");
-        var qr_svg = qr.image(quickpay_request, {type: 'png'});
-        qr_svg.pipe(require('fs').createWriteStream(dir + "latestinvoice_easy.png"));
 
         if(quickpay == true) {
           response.payment_request = quickpay_request;
