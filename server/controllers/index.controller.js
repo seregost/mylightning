@@ -93,7 +93,10 @@
     function dologout()
     {
       lightningService.execLogout();
-      window.location.replace("/login");
+      if(window.localStorage.getItem("isPhoneGap") == "1")
+        window.location.replace("./views/login.html");
+      else
+        window.location.replace("/login");
     }
 
     function changescreen(screenname)

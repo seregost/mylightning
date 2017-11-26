@@ -27,7 +27,7 @@
   <nav class="navbar navbar-default">
     <div class="container-fluid">
       <div class="navbar-header" nowrap>
-        <a class="navbar-brand" href="#">myLIGHTNING</a>
+        <a class="navbar-brand" href="#">myCOINBLITZ</a>
       </div>
     </div>
   </nav>
@@ -100,7 +100,7 @@
 
       if(window.localStorage.getItem("isPhoneGap") == "1") {
         var url = window.localStorage.getItem("server")
-        if(url.length > 0) {
+        if(url != null) {
           var server = url.split(":");
           $("#server").val(server[0])
           $("#port").val(server[1])
