@@ -542,7 +542,7 @@ module.exports = class Lighting {
   {
     try {
       this._lightning.GetChanInfo({"chan_id": channelid}, (err,response) => {
-        logger.debug(this._userid, "Channel point to close: ", response.chan_point);
+        logger.verbose(this._userid, "Channel point to close: ", response.chan_point);
 
         var channel_point = response.chan_point.split(':');
 
@@ -555,11 +555,17 @@ module.exports = class Lighting {
             }
           });
 
-        call.on('data', function(message) {
+        call.on('data', (message) => {
           logger.info(this._userid, "lnd.closechannel succeeded.  Channel closed.");
+          callback({});
+        });
+
+        call.on('error', (err) => {
+          // The server has finished sending
+          logger.error(this._userid, "lnd.closechannel failed: " + err.message);
+          callback({"error":{"message":err}});
         });
       });
-      callback({});
     }
     catch(e) {
       logger.error(this._userid, "lnd.closechannel failed.  Error code:" + e);

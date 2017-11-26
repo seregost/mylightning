@@ -1,23 +1,28 @@
 'use strict';
 
-const express = require("express");
-const https = require('https');
-const fs = require('fs');
-const config = require('config');
-const Lightning = require("./lightning/"+config.get("lightning-node"));
-const session = require('express-session');
-const LevelStore = require('express-session-level')(session);
 const bodyParser = require('body-parser');
+const config = require('config');
 const cookieParser  = require('cookie-parser');
+const csurf = require('csurf');
+const express = require("express");
+const fs = require('fs');
+const https = require('https');
+const leveldown = require('leveldown')
+const levelup = require('levelup')
+const Lightning = require("./lightning/"+config.get("lightning-node"));
 const lightningmodule = require("./lightning/"+config.get("lightning-node"));
-const passport = require('passport');
 const localStrategy = require('passport-local').Strategy;
 const logger = require("./logger");
+const passport = require('passport');
 const qr = require('qr-image');
+const session = require('express-session');
 const UserManager = require('./utilities/usermanager.js');
-const levelup = require('levelup')
-const leveldown = require('leveldown')
 const WebSocket = require('ws');
+
+const LevelStore = require('express-session-level')(session);
+
+// Implemented best practices from:
+// https://expressjs.com/en/advanced/best-practice-security.html#use-cookies-securely
 
 // Initialize levelDB storage
 var db = levelup(leveldown('./mydb'))
@@ -85,18 +90,24 @@ passport.deserializeUser(function(obj, cb) {
 var app = express();
 
 logger.info("Configuring express");
+var expiryDate = new Date(Date.now() + 2* 60 * 60 * 1000) // 2 hours
 const sessionParser = session({
-  secret: 'ieowieow',
+  secret: 'FKU6LHLT',
   store: new LevelStore(db),
   resave: true,
   saveUninitialized: true,
-  cookie: { secure: true }
+  cookie: {
+    httpOnly: true,
+    secure: true ,
+    domain: config.get("webserver"),
+    expires: expiryDate
+  }
 })
 
 app
   .use(bodyParser.json()) // support json encoded bodies
   .use(bodyParser.urlencoded({ extended: true })) // support encoded bodies
-  .use(cookieParser('htuayreve'))
+  .use(cookieParser('PP3T7LHQ'))
   .use(sessionParser)
   .use(passport.initialize())
   .use(passport.session());
@@ -106,6 +117,19 @@ app.get('/login', function(req, res){
   });
 
 app.post('/login',
+  passport.authenticate('local'),
+  function(req, res) {
+    if(req.user != null) {
+      logger.info(req.user.id, "Successfully authenticated.")
+    }
+    else {
+      logger.error("Unauthorized login attempt with invalid password.")
+    }
+    // do something with req.user
+    res.sendStatus(req.user ? 200 : 401);
+  });
+
+app.post('/rest/v1/login',
   passport.authenticate('local'),
   function(req, res) {
     if(req.user != null) {
@@ -150,6 +174,20 @@ app.post('/rest/v1/requestinvoice', function (req, res) {
     logger.error(userid, "Exception occurred in /rest/v1/requestinvoice: " + e.message);
     res.sendStatus(500);
   }
+})
+
+// REST Specification:
+// https://editor.swagger.io/?_ga=2.214030551.1199320075.1511718443-1620193370.1511718443
+// Require CSRF protection past this point.
+app.use(csurf({cookie: true}));
+
+app.use(function (err, req, res, next) {
+  if (err.code !== 'EBADCSRFTOKEN') return next(err)
+
+  // handle CSRF token errors here
+  logger.error(req.user.id, "Detected potential request tampering: " + err.message);
+  res.status(200)
+  res.send({"error": {"message": "Could not verify connection.  Please logout and try again."}})
 })
 
 // Blanketly require authentication beyond this point before using any other resources.
@@ -280,34 +318,6 @@ app.post('/rest/v1/closechannel', function (req, res) {
   }
 })
 
-app.get('/rest/v1/getinvoiceqr', function (req, res) {
-  try {
-    var userid = req.user.id;
-    var easypay = req.query.easypay;
-
-    if(easypay == null) {
-      fs.readFile('./db/'+req.user.id+'/latestinvoice.png', function (err, data) {
-        if (err) throw err;
-        logger.verbose(userid, "/rest/v1/getinvoiceqr (none quickpay) succeeded")
-        res.contentType("image/png");
-        res.send(data);
-      });
-    }
-    else {
-      fs.readFile('./db/'+req.user.id+'/latestinvoice_easy.png', function (err, data) {
-        if (err) throw err;
-        logger.verbose(userid, "/rest/v1/getinvoiceqr (quickpay) succeeded")
-        res.contentType("image/png");
-        res.send(data);
-      });
-    }
-  }
-  catch (e) {
-    logger.error(userid, "Exception occurred in /rest/v1/getinvoiceqr: " + e.message);
-    res.sendStatus(500);
-  }
-})
-
 app.get('/rest/v1/getqrimage', function (req, res) {
   try {
     var userid = req.user.id;
@@ -325,7 +335,7 @@ app.get('/rest/v1/getqrimage', function (req, res) {
 })
 
 /**
-* Get all quick data for a user in one go.
+* Returns all wallet data for the current user.
 */
 app.get('/rest/v1/getalldata', function (req, res) {
   try {
@@ -349,6 +359,7 @@ app.get('/rest/v1/getalldata', function (req, res) {
       return readjson(dir+'transactions.json');
     }).then((data) => {
       datapackage.transactions = data;
+      datapackage._csrf = req.csrfToken();
       res.send(datapackage);
     }).catch((error) => {
       logger.error(req.user.id, "Exception occurred in /rest/v1/getalldata: " + error);

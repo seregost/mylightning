@@ -20,6 +20,7 @@
 
     _registerTransitions();
 
+
     /**
     * SignalR receive message loop.
     * @param {json} data - contains type of update and any paramaters
@@ -34,6 +35,8 @@
           memo = " for \""+data.params[0].memo + "\" ";
 
         _displayalert("You recieved a payment" + memo + "in the amount of "+data.params[0].value.toFixed(2));
+        _displaynotification("Payment Recieved", "You recieved a payment" + memo + "in the amount of "+data.params[0].value.toFixed(2));
+
         $scope.$apply();
         // Wait a little bit to allow payments to settle.  Then refresh our data.
         setTimeout(() => {vm.refresh()}, 2000);
@@ -116,6 +119,21 @@
       $("#alertbox").finish();
       vm.alerttext = message;
       $("#alertbox").fadeIn().animate({opacity:1},2000).fadeOut();
+    }
+
+    /**
+    * Display a device notification if possible.
+    */
+    function _displaynotification(msgtitle, message)
+    {
+      if(cordova.plugins.notification != null)
+      {
+        cordova.plugins.notification.local.schedule({
+            title: msgtitle,
+            text: message,
+            foreground: true
+        });
+      }
     }
 
     /**
