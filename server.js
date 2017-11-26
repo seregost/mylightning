@@ -396,7 +396,8 @@ logger.info("Configured REST routes");
 // Initialize SSL settings
 var sslOptions = {
   key: fs.readFileSync('./certs/key.pem'),
-  cert: fs.readFileSync('./certs/cert.pem')
+  cert: fs.readFileSync('./certs/cert.pem'),
+  ca: fs.readFileSync('./certs/ca.pem')
 };
 
 var httpsServer = https.createServer(sslOptions, app).listen(config.get("webport"));
