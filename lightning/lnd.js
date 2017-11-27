@@ -542,29 +542,34 @@ module.exports = class Lighting {
   {
     try {
       this._lightning.GetChanInfo({"chan_id": channelid}, (err,response) => {
-        logger.verbose(this._userid, "Channel point to close: ", response.chan_point);
+        if(err != null) {
+          logger.error(this._userid, "lnd.closechannel failed on GetChanInfo: " + JSON.stringify(err));
+          callback({"error":{"message":err.message}});
+        }
+        else {
+          logger.verbose(this._userid, "Channel point to close: ", response.chan_point);
 
-        var channel_point = response.chan_point.split(':');
+          var channel_point = response.chan_point.split(':');
 
-        var call = this._lightning.CloseChannel(
-          {
-            "channel_point":
+          var call = this._lightning.CloseChannel(
             {
-              "funding_txid": ByteBuffer.fromHex(channel_point[0]).reverse(),
-              "output_index": parseInt(channel_point[1])
-            }
+              "channel_point":
+              {
+                "funding_txid": ByteBuffer.fromHex(channel_point[0]).reverse(),
+                "output_index": parseInt(channel_point[1])
+              }
+            });
+
+          call.on('data', (message) => {
+            logger.info(this._userid, "lnd.closechannel succeeded.  Channel closed.");
           });
 
-        call.on('data', (message) => {
-          logger.info(this._userid, "lnd.closechannel succeeded.  Channel closed.");
-          callback({});
-        });
-
-        call.on('error', (err) => {
-          // The server has finished sending
-          logger.error(this._userid, "lnd.closechannel failed: " + err.message);
-          callback({"error":{"message":err}});
-        });
+          call.on('error', (err) => {
+            // The server has finished sending
+            logger.error(this._userid, "lnd.closechannel failed: " + err.message);
+            callback({"error":{"message":err}});
+          });
+        }
       });
     }
     catch(e) {

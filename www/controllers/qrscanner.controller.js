@@ -30,10 +30,6 @@
       } catch(e){}
 
       $element.modal('hide');
-
-      // Hack to eliminate backdrop remaining bug.
-      // var backdrop = $(".modal-backdrop");
-      // if(backdrop != null) backdrop.fadeOut('fast');
     }
   }]);
 })();

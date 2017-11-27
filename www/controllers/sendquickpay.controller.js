@@ -1,7 +1,7 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('SendQuickPayController', ['$scope', '$element', 'quickpaynodes', 'lightningService', 'close', function($scope, $element, quickpaynodes, lightningService, close) {
+  .controller('SendQuickPayController', ['$scope', '$element', 'quickpaynodes', 'lightningService', 'ModalService', 'close', function($scope, $element, quickpaynodes, lightningService, ModalService, close) {
     $scope.quickpaynodes = quickpaynodes;
 
     $scope.selecteditem = null;
@@ -30,21 +30,39 @@
       var amount = $scope.quickpay.amount;
 
       if(amount > 0) {
-        $scope.quickpay.loading=true;
-
-        lightningService.execQuickPay(dest, amount, memo).then((response) => {
-          if(response.data.error == null) {
-            $scope.quickpay.haserror = false;
-            $scope.quickpay.success = true;
-
-            closemodal();
-            close($scope.quickpay, 500);
+        $("#quickpaymodal").hide();
+        ModalService.showModal({
+          templateUrl: "modals/verification.html",
+          controller: "VerificationController",
+          inputs: {
+            message: "Please enter your PIN to confirm that you wish to pay " + amount.toFixed(2) + " to '" + $scope.selecteditem.item.alias + ".'"
           }
-          else {
-              $scope.quickpay.haserror = true;
-              $scope.quickpay.error = response.data.error.message;
-          }
-          $scope.quickpay.loading = false;
+        }).then(function(modal) {
+          // The modal object has the element built, if this is a bootstrap modal
+          // you can call 'modal' to show it, if it's a custom modal just show or hide
+          // it as you need to.
+          modal.element.modal();
+          modal.close.then(function(result) {
+            $("#quickpaymodal").show();
+            if(result.confirmed == true)
+            {
+              $scope.quickpay.loading=true;
+              lightningService.execQuickPay(result.password, dest, amount, memo).then((response) => {
+                if(response.data.error == null) {
+                  $scope.quickpay.haserror = false;
+                  $scope.quickpay.success = true;
+
+                  closemodal();
+                  close($scope.quickpay, 500);
+                }
+                else {
+                    $scope.quickpay.haserror = true;
+                    $scope.quickpay.error = response.data.error.message;
+                }
+                $scope.quickpay.loading = false;
+              });
+            }
+          });
         });
       }
     }

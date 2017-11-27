@@ -8,6 +8,7 @@
 
       ls._data = null;
       ls._server = "://localhost:8444/";
+      ls._csrf = null;
 
       var storage = window.localStorage;
       if(storage.getItem("server") != null)
@@ -54,6 +55,7 @@
           {
             $http.get("https" + ls._server + 'rest/v1/getalldata').then((response) => {
               ls._data = response.data;
+              ls._csrf = response.data._csrf;
               resolve();
             });
           }
@@ -93,28 +95,56 @@
           return new Promise((resolve) => resolve(ls._data.transactions));
       };
 
-      ls.execQuickPay = function(dest, amount, memo) {
-        return $http.post("https" + ls._server + 'rest/v1/quickpay', {"_csrf" : ls._data._csrf, "dest": dest, "memo": memo, "amount": parseFloat(amount)});
+      ls.execQuickPay = function(password, dest, amount, memo) {
+        return $http.post("https" + ls._server + 'rest/v1/quickpay',
+        {
+          "_csrf" : ls._csrf,
+          "password": password,
+          "dest": dest,
+          "memo": memo,
+          "amount": parseFloat(amount)
+        });
       };
 
       this.execCreateInvoice = function(amount, memo, quickpay) {
-        return $http.post("https" + this._server + 'rest/v1/createinvoice', {"_csrf" : ls._data._csrf, "memo": memo, "amount": parseFloat(amount), "quickpay": quickpay});
+        return $http.post("https" + this._server + 'rest/v1/createinvoice',
+        {
+          "_csrf" : ls._csrf,
+          "memo": memo,
+          "amount": parseFloat(amount),
+          "quickpay": quickpay
+        });
       };
 
       this.execSendInvoice = function(invoiceid, alias) {
-        return $http.post("https" + this._server + 'rest/v1/sendinvoice', {"_csrf" : ls._data._csrf, "invoiceid": invoiceid, "alias": alias});
+        return $http.post("https" + this._server + 'rest/v1/sendinvoice',
+        {
+          "_csrf" : ls._csrf,
+          "invoiceid": invoiceid,
+          "alias": alias
+        });
       };
 
       this.execOpenChannel = function(remotenode, amount) {
-        return $http.post("https" + this._server + 'rest/v1/openchannel', {"_csrf" : ls._data._csrf, "remotenode": remotenode, "amount": parseFloat(amount)});
+        return $http.post("https" + this._server + 'rest/v1/openchannel',
+        {
+          "_csrf" : ls._csrf,
+          "remotenode": remotenode,
+          "amount": parseFloat(amount)
+        });
       };
 
-      this.execCloseChannel = function(channelpoint) {
-        return $http.post("https" + this._server + 'rest/v1/closechannel', {"_csrf" : ls._data._csrf, "channelpoint": channelpoint});
+      this.execCloseChannel = function(password, channelpoint) {
+        return $http.post("https" + this._server + 'rest/v1/closechannel',
+        {
+          "_csrf" : ls._csrf,
+          "password": password,
+          "channelpoint": channelpoint
+        });
       };
 
       this.execLogout = function() {
-        return $http.post("https" + this._server + 'rest/v1/logout', {"_csrf" : ls._data._csrf});
+        return $http.post("https" + this._server + 'rest/v1/logout', {"_csrf" : ls._csrf});
       };
   }]);
 })();

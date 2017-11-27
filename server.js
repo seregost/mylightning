@@ -62,7 +62,7 @@ passport.use(new localStrategy(
         });
       }
       else {
-        return userManager.verifypassword(user, password, (success,user) => {
+        return userManager.verifypassword(username, password, (success,user) => {
           if(success == true) {
             logger.verbose(username, "Valid login for user.");
             return done(null, user);
@@ -98,9 +98,7 @@ const sessionParser = session({
   saveUninitialized: true,
   cookie: {
     httpOnly: true,
-    secure: true ,
-    domain: config.get("webserver"),
-    expires: expiryDate
+    secure: true
   }
 })
 
@@ -254,13 +252,22 @@ app.post('/rest/v1/quickpay', function (req, res) {
     var dest = req.body.dest;
     var amount = req.body.amount;
     var memo = req.body.memo;
+    var password = req.body.password;
 
-    lightningnodes[userid].quickpay(dest, amount, memo, (response) => {
-      logger.verbose(userid, "/rest/v1/quickpay succeeded")
-      logger.debug(userid, "Response:" + JSON.stringify(response));
+    userManager.verifypassword(userid, password, (success,user) => {
+      if(success == false) {
+        logger.verbose(userid, "Invalid password entered.")
+        res.send({"error":{"message": "The password you entered was invalid.  Please try again."}});
+      }
+      else {
+        lightningnodes[userid].quickpay(dest, amount, memo, (response) => {
+          logger.verbose(userid, "/rest/v1/quickpay succeeded")
+          logger.debug(userid, "Response:" + JSON.stringify(response));
 
-      res.send(response);
-  });
+          res.send(response);
+        });
+      }
+    });
   } catch (e) {
     logger.error(userid, "Exception occurred in /rest/v1/quickpay: " + e.message);
     res.sendStatus(500);
@@ -306,11 +313,20 @@ app.post('/rest/v1/closechannel', function (req, res) {
   try {
     var userid = req.user.id;
     var channelpoint = req.body.channelpoint;
+    var password = req.body.password;
 
-    lightningnodes[userid].closechannel(channelpoint, (response) => {
-      logger.verbose(userid, "/rest/v1/closechannel succeeded.")
-      logger.debug(userid, "Response:" + JSON.stringify(response));
-      res.send(response);
+    userManager.verifypassword(userid, password, (success,user) => {
+      if(success == false) {
+        logger.verbose(userid, "Invalid password entered.")
+        res.send({"error":{"message": "The password you entered was invalid.  Please try again."}});
+      }
+      else {
+        lightningnodes[userid].closechannel(channelpoint, (response) => {
+          logger.verbose(userid, "/rest/v1/closechannel succeeded.")
+          logger.debug(userid, "Response:" + JSON.stringify(response));
+          res.send(response);
+        });
+      }
     });
   } catch (e) {
     logger.error(userid, "Exception occurred in /rest/v1/closechannel: " + e.message);

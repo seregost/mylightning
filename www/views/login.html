@@ -10,7 +10,7 @@
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/slate/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/sandstone/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.css">
 
@@ -75,7 +75,7 @@
           <div class="form-group">
             <div class"form-control">
             <label for="password">Your Pin:</label>
-            <input type="password" class="form-control" id="password" minlength="4" required/>
+              <input type="password" name="password" id="password" class="form-control" autofocus />
           </div>
         </div>
       </div>
@@ -146,7 +146,6 @@
 
           // Store username for future.
           window.localStorage.setItem("username", $("#email").val());
-
           var data = {
             username: $("#email").val().trim().toLowerCase(),
             password: $("#password").val()

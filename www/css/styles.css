@@ -11,7 +11,7 @@ body { padding-right: 0 !important; padding-top: 70px; overflow-x: hidden}
   /*box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
   /*-webkit-box-shadow: 1px 1px 3px 1px rgba(0,0,0,0.42);
   -moz-box-shadow: 1px 1px 3px 1px rgba(0,0,0,0.42);*/
-  box-shadow: 1px 1px 3px 1px rgba(0,0,0,0.42);
+  box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.3);
 }
 .mono {
   font-family: Consolas, Lucida Console, monospace;

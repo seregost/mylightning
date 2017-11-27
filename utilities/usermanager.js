@@ -72,18 +72,25 @@ module.exports = class UserManager {
     return this._usersById[userid];
   }
 
-  verifypassword(user, password, callback) {
-    bcrypt.compare(password, user.password, function(err, doesMatch){
-      if(err != null)
-        reject(err);
+  verifypassword(userid, password, callback) {
+    var user = this._usersById[userid];
 
-      if (doesMatch) {
-         callback(true, user);
-      }
-      else{
-         callback(false, null);
-      }
-    });
+    if(password == null || password == undefined)
+      callback(false, null);
+    else {
+      bcrypt.compare(password, user.password, function(err, doesMatch){
+        if(err != null)
+          callback(false, null);
+        else {
+          if (doesMatch) {
+             callback(true, user);
+          }
+          else{
+             callback(false, null);
+          }
+        }
+      });
+    }
   }
 
   each(callback) {

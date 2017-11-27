@@ -75,7 +75,7 @@
                <div class="panel-heading">
                   <ul class="list-inline">
                      <li class="h4">
-                        <b>Open Channels</b><br>
+                        Open Channels<br>
                         <b class="h6">Viewing: ({{vm.selectedchannel.text}})</b>
                      </li>
                      <li>
@@ -103,14 +103,14 @@
                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                               <strong>Remote Node ID:</strong>
                               <p>{{u.node}}<br/>
-                                 <span class="label label-primary">{{u.alias}}</span>
+                                 <span class="label label-default">{{u.alias}}</span>
                               </p>
                            </div>
                         </div>
                         <div class="row">
                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                               <div class="progress" style="height:10px">
-                                 <div class="progress-bar progress-bar-success" role="progressbar" style="transition:none;width: {{u.balance/u.capacity*100}}%" aria-valuenow="{{u.balance}}" aria-valuemin="0" aria-valuemax="{{u.capacity}}"></div>
+                                 <div class="progress-bar progress-bar-{{u.displaytype}}" role="progressbar" style="transition:none;width: {{u.balance/u.capacity*100}}%" aria-valuenow="{{u.balance}}" aria-valuemin="0" aria-valuemax="{{u.capacity}}"></div>
                               </div>
                            </div>
                         </div>
@@ -124,13 +124,13 @@
                               <p>{{u.capacity | number: 2}}</p>
                            </div>
                            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
-                              <strong>Status:</strong>
-                              <p>{{u.state}}</p>
+                              <strong>Status:</strong><br>
+                              <span class="label label-{{u.displaytype}}" style="font-size:0.8em">{{u.state}}</span>
                            </div>
                            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 text-right">
                               <div class="btn-group">
-                                 <div class="btn btn-primary" ng-click="vm.close(u.channel)">Close</div>
-                                 <div class="btn btn-primary" ng-click="vm.forceclose(u.channel)">Force Close</div>
+                                 <div class="btn btn-sm btn-primary" ng-click="vm.close(u.channel)">Close</div>
+                                 <div class="btn btn-sm btn-primary" ng-click="vm.forceclose(u.channel)">Force Close</div>
                               </div>
                            </div>
                         </div>

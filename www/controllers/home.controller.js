@@ -150,9 +150,40 @@
     * @param {string} channelpoint - the channelpoint identifying the channel to close.
     */
     function close(channelpoint) {
-      lightningService.execCloseChannel(channelpoint).then((response) => {
-        console.log(response);
+      ModalService.showModal({
+        templateUrl: "modals/verification.html",
+        controller: "VerificationController",
+        inputs: {
+          message: "Enter your PIN to confirm that you wish to close this channel.  By doing so you agree " +
+          "to pay the neccessary fees to settle the channel on the blockchain.  Please note that channel settlement " +
+          "can sometimes take an hour or more to complete."
+        }
+      }).then(function(modal) {
+        // The modal object has the element built, if this is a bootstrap modal
+        // you can call 'modal' to show it, if it's a custom modal just show or hide
+        // it as you need to.
+        modal.element.modal();
+        modal.close.then(function(result) {
+          if(result.confirmed == true)
+          {
+            // Hack to eliminate backdrop remaining bug.
+            var backdrop = $(".modal-backdrop");
+            if(backdrop != null) backdrop.remove();
+
+            lightningService.execCloseChannel(result.password, channelpoint).then((response) => {
+              if(response.data.error != null) {
+                $scope.$emit("child:showalert",
+                  "Failed to close channel: " + response.data.error.message);
+              }
+              else {
+                $scope.$emit("child:showalert",
+                  "Initiated settlement of the channel.");
+              }
+            });
+          }
+        });
       });
+
     }
 
     /**
@@ -183,6 +214,14 @@
                 value.alias = vm.quickpaynodes[keys[i]].alias
             }
           }
+
+          // Set display type for status.
+          if(value.state.includes("Open"))
+            value.displaytype = "success";
+          else if(value.state.includes("Pending"))
+            value.displaytype = "warning";
+          else
+            value.displaytype = "danger"
         });
         return lightningService.getInfo();
       }).then((response) => {

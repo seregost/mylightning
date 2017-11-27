@@ -20,7 +20,6 @@
 
     _registerTransitions();
 
-
     /**
     * SignalR receive message loop.
     * @param {json} data - contains type of update and any paramaters

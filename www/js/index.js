@@ -26,6 +26,13 @@ var app = {
   // Bind any events that are required on startup. Common events are:
   // 'load', 'deviceready', 'offline', and 'online'.
   bindEvents: function () {
+    $(document).on('click', '.navbar-collapse.collapse.in a:not(.dropdown-toggle)', function() {
+        $(this).closest(".navbar-collapse").collapse('hide');
+    });
+    $(document).on('click', '.navbar-collapse.collapse.in button:not(.navbar-toggle)', function() {
+        $(this).closest(".navbar-collapse").collapse('hide');
+    });
+
     document.addEventListener('deviceready', this.onDeviceReady, false);
     angular.element(document).ready(function () {
       if (window.cordova) {
@@ -60,5 +67,5 @@ var app = {
     }
   }
 };
-
+//$('#theme').attr('href',"https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/sandstone/bootstrap.min.css");
 app.initialize();
