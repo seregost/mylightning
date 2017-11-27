@@ -1,13 +1,14 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('SendQuickPayController', ['$scope', '$element', 'quickpaynodes', 'lightningService', 'ModalService', 'close', function($scope, $element, quickpaynodes, lightningService, ModalService, close) {
+  .controller('SendQuickPayController', ['$scope', '$element', 'broadcastService', 'quickpaynodes', 'lightningService', 'ModalService', 'close', function($scope, $element, broadcastService, quickpaynodes, lightningService, ModalService, close) {
     $scope.quickpaynodes = quickpaynodes;
 
     $scope.selecteditem = null;
 
     $scope.aliasoptions = {
       minimumChars: 0,
+      activateOnFocus: true,
       data: function (term) {
         term = term.toUpperCase();
         return _.filter($scope.quickpaynodes, function (quickpaynode) {
@@ -23,7 +24,10 @@
         $scope.quickpay.alias = item.item.alias;
       }
     }
-
+    $scope.showinfo = () => {
+      broadcastService.send("child:showalert",
+        "Enter an alias and amount to quickly send a payment to a friend's account.  Aliases are part of your address booked, and can be created any time you pay an invoice to a friend.");
+    }
     $scope.sendquickpay = () => {
       var dest = $scope.selecteditem.item.pub_key;
       var memo = $scope.quickpay.memo;

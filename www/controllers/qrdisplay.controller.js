@@ -1,7 +1,8 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('QRDisplayController', ['$scope', '$element', 'qrinfo', 'lightningService', 'close', function($scope, $element, qrinfo, lightningService, close) {
+  .controller('QRDisplayController', ['$scope', '$element', 'qrinfo', 'lightningService', 'close',
+  function($scope, $element, qrinfo, lightningService, close) {
     $scope.server = lightningService.getServer();
     $scope.qrinfo = qrinfo;
 

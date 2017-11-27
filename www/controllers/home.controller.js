@@ -2,7 +2,8 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('HomeController', ['$scope', 'lightningService', 'ModalService', '$location', function($scope, lightningService, ModalService, $location) {
+  .controller('HomeController', ['$scope', 'lightningService', 'ModalService', '$location',
+  function($scope, lightningService, ModalService, $location) {
     var vm = this;
 
     // Variables
@@ -64,8 +65,6 @@
         }
       }).then(function(modal) {
           modal.element.modal();
-          $scope.$emit("child:showalert",
-            "Enter an alias and amount to quickly send a payment to a friend's account");
           modal.close.then(function(result) {
             vm.quickpay = result;
             if(vm.quickpay.success == true)
@@ -101,8 +100,6 @@
         controller: "SendPaymentController",
       }).then(function(modal) {
           modal.element.modal();
-          $scope.$emit("child:showalert",
-            "To submit your payment, please enter or scan the routing number provided by your vendor.");
           modal.close.then(function(result) {
             vm.sendpayment = result;
             if(vm.sendpayment.success == true)
@@ -164,12 +161,12 @@
         // it as you need to.
         modal.element.modal();
         modal.close.then(function(result) {
+          // Hack to eliminate backdrop remaining bug.
+          var backdrop = $(".modal-backdrop");
+          if(backdrop != null) backdrop.remove();
+
           if(result.confirmed == true)
           {
-            // Hack to eliminate backdrop remaining bug.
-            var backdrop = $(".modal-backdrop");
-            if(backdrop != null) backdrop.remove();
-
             lightningService.execCloseChannel(result.password, channelpoint).then((response) => {
               if(response.data.error != null) {
                 $scope.$emit("child:showalert",

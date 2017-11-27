@@ -1,7 +1,8 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('QRScannerController', ['$scope', '$element', 'close', function($scope, $element, close) {
+  .controller('QRScannerController', ['$scope', '$element', 'close',
+  function($scope, $element, close) {
     $scope.result = "";
 
     $(document).ready(() => {

@@ -233,12 +233,21 @@ app.post('/rest/v1/sendinvoice', function (req, res) {
     var userid = req.user.id;
     var invoiceid = req.body.invoiceid;
     var alias = req.body.alias;
+    var password = req.body.password;
 
-    lightningnodes[userid].sendinvoice(invoiceid, alias, (response) => {
-      logger.verbose(userid, "/rest/v1/sendinvoice succeeded.")
-      logger.debug(userid, "Response:" + JSON.stringify(response));
+    userManager.verifypassword(userid, password, (success,user) => {
+      if(success == false) {
+        logger.verbose(userid, "Invalid password entered.")
+        res.send({"error":{"message": "The PIN you entered was invalid.  Please try again."}});
+      }
+      else {
+        lightningnodes[userid].sendinvoice(invoiceid, alias, (response) => {
+          logger.verbose(userid, "/rest/v1/sendinvoice succeeded.")
+          logger.debug(userid, "Response:" + JSON.stringify(response));
 
-      res.send(response);
+          res.send(response);
+        });
+      }
     });
   } catch (e) {
     logger.error(userid, "Exception occurred in /rest/v1/sendinvoice: " + e.message);
@@ -257,7 +266,7 @@ app.post('/rest/v1/quickpay', function (req, res) {
     userManager.verifypassword(userid, password, (success,user) => {
       if(success == false) {
         logger.verbose(userid, "Invalid password entered.")
-        res.send({"error":{"message": "The password you entered was invalid.  Please try again."}});
+        res.send({"error":{"message": "The PIN you entered was invalid.  Please try again."}});
       }
       else {
         lightningnodes[userid].quickpay(dest, amount, memo, (response) => {
@@ -318,7 +327,7 @@ app.post('/rest/v1/closechannel', function (req, res) {
     userManager.verifypassword(userid, password, (success,user) => {
       if(success == false) {
         logger.verbose(userid, "Invalid password entered.")
-        res.send({"error":{"message": "The password you entered was invalid.  Please try again."}});
+        res.send({"error":{"message": "The PIN you entered was invalid.  Please try again."}});
       }
       else {
         lightningnodes[userid].closechannel(channelpoint, (response) => {

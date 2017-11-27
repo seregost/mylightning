@@ -1,7 +1,8 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('VerificationController', ['$scope', '$element', 'message', 'close', function($scope, $element, message, close) {
+  .controller('VerificationController', ['$scope', '$element', 'message', 'close',
+  function($scope, $element, message, close) {
     $scope.verification = {};
     $scope.verification.message = message;
 

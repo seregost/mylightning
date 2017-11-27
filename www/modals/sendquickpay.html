@@ -44,8 +44,12 @@
             </div>
           </div>
           <div class="modal-footer">
+            <div class="btn-group pull-left">
+              <a href="javascript:void(0)" class="glyphicon glyphicon-info-sign" ng-click="showinfo()" style="text-decoration: none; text-shadow: 2px 2px 4px grey; color:blue; font-size: 35px;"></a>
+            </div>
             <div class="btn-group" ng-show="quickpay.loading">
               <div class="loader"></div>
+
             </div>
             <div class="btn-group">
               <button type="button" ng-click="sendquickpay()" ng-disabled="!quickpayform.$valid||quickpay.loading" class="btn btn-success">Send</button>

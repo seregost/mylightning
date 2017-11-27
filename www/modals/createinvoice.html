@@ -47,10 +47,13 @@
           </div>
           <div class="row" align="center" ng-show="createinvoice.codeready">
             <img id="invoice-image" style="width: 300px; height: 300px;"><br/><br/>
-            <p ng-cloak class="mono" align="left" style="width: 100%;word-wrap: break-word!important">{{createinvoice.invoicecode}}</p>
+            <p ng-cloak class="mono" align="center" style="padding:10px; width: 100%;word-wrap: break-word!important">{{createinvoice.invoicecode}}</p>
           </div>
         </div>
         <div class="modal-footer">
+          <div class="btn-group pull-left">
+            <a href="javascript:void(0)" class="glyphicon glyphicon-info-sign" ng-click="showinfo()" style="text-decoration: none; text-shadow: 2px 2px 4px grey; color:blue; font-size: 35px;"></a>
+          </div>
           <div class="btn-group" ng-show="createinvoice.loading">
             <div class="loader"></div>
           </div>

@@ -116,10 +116,11 @@
         });
       };
 
-      this.execSendInvoice = function(invoiceid, alias) {
+      this.execSendInvoice = function(password, invoiceid, alias) {
         return $http.post("https" + this._server + 'rest/v1/sendinvoice',
         {
           "_csrf" : ls._csrf,
+          "password": password,
           "invoiceid": invoiceid,
           "alias": alias
         });

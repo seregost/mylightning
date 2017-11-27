@@ -2,7 +2,8 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('MainController', ['$scope', 'lightningService', 'ModalService', '$location', function($scope, lightningService, ModalService, $location) {
+  .controller('MainController', ['$scope', 'lightningService', 'ModalService', '$location',
+  function($scope, lightningService, ModalService, $location) {
     var vm = this;
 
     // Variables
