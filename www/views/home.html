@@ -37,7 +37,7 @@
                      </div>
                   </div>
                   <div class="row">
-                     <div class="col-xs-12 col-sm-7 col-md-6 col-lg-5">
+                     <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
                         <div class="btn-group btn-group-justified">
                            <a href="javascript:void(0)" style="white-space: pre-wrap; !important" ng-click="vm.doquickpay()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-info" ng-show="vm.hasaliases">Quick Pay</a>
                            <a href="javascript:void(0)" style="white-space: pre-wrap; !important" ng-click="vm.dosendpayment()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-success">Pay Invoice</a>
@@ -46,24 +46,21 @@
                      </div>
                   </div>
                   <br>
-                  <div class="row">
-                     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                        <strong><span class="glyphicon glyphicon-qrcode qrcodeicon"></span> Bitcoin Address: </strong>
-                        <p class="mono" ng-cloak>
-                           <a href="javascript:void(0)" ng-click="vm.doqrdisplay('Bitcoin Address', vm.btcaddress)">
-                        <blockquote class="walletblock">{{vm.btcaddress}}</blockquote></a></p>
-                     </div>
-                  </div>
-                  <div class="row">
-                     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                        <strong><span style="padding-left:-3px;" class="glyphicon glyphicon-qrcode qrcodeicon"></span> Lightning Connection Code: </strong>
-                        <p class="mono" ng-cloak>
-                          <a href="javascript:void(0)" ng-click="vm.doqrdisplay('Lightning Connection Code', vm.info.result.nodeId+'@'+vm.info.result.alias+':'+vm.info.result.port)">
-                            <blockquote class="walletblock">{{vm.info.result.nodeId}}@{{vm.info.result.alias}}:{{vm.info.result.port}}
-                            </blockquote>
-                          </a>
-                        </p>
-                     </div>
+                  <div class="row" >
+                    <div class="col-xs-6 col-sm-3 col-md-2 col-lg-2" >
+                      <p ng-cloak style="text-align:center">
+                        <a href="javascript:void(0)" class="glyphicon glyphicon-qrcode" ng-click="vm.doqrdisplay('Bitcoin Address', vm.btcaddress)" style="text-decoration: none; text-shadow: 4px 4px 8px grey; color:orange; font-size: 100px;">
+                        </a><br>
+                        Bitcoin Address
+                      </p>
+                    </div>
+                    <div class="col-xs-6 col-sm-3 col-md-2 col-lg-2" >
+                      <p ng-cloak style="text-align:center">
+                        <a href="javascript:void(0)" class="glyphicon glyphicon-qrcode" ng-click="vm.doqrdisplay('Lightning Connection Code', vm.info.result.nodeId+'@'+vm.info.result.alias+':'+vm.info.result.port)" style="-webkit-transform: rotate(90deg); text-decoration: none; text-shadow: 4px 4px 8px grey; color:yellow; font-size: 100px;">
+                        </a><br>
+                        Lightning Code
+                      </p>
+                    </div>
                   </div>
                </div>
             </div>
