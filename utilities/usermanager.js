@@ -5,7 +5,7 @@ const logger = require("../logger");
 const sprintf = require('sprintf').sprintf;
 const bcrypt = require("bcrypt");
 
-module.exports = class UserManager {
+class UserManager {
   constructor(userdb) {
     this._usersById = {};
     this._userdb = sprintf("./db/%s.json", userdb);
@@ -108,3 +108,5 @@ module.exports = class UserManager {
     return true;
   }
 }
+
+module.exports.userManager = new UserManager("users");

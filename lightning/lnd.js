@@ -121,7 +121,7 @@ module.exports = class Lighting {
       }
       this.getinfo((response) => {
         try {
-          local._pubkey = response.result.nodeId;
+          local._pubkey = response.nodeId;
           fs.writeFileSync(dir+'info.json', JSON.stringify(response));
 
           local.getbalance((balance) => {
@@ -243,13 +243,11 @@ module.exports = class Lighting {
       }
       var info =
       {
-        "result": {
-          "nodeId": response.identity_pubkey,
-          "alias": config.get("netip"),
-          "port": this._peerport,
-          "synchronized": response.synced_to_chain,
-          "blockheight": response.block_height
-        }
+        "nodeId": response.identity_pubkey,
+        "alias": config.get("netip"),
+        "port": this._peerport,
+        "synchronized": response.synced_to_chain,
+        "blockheight": response.block_height
       }
       logger.silly(this._userid, "lnd.getinfo succeeded.");
       callback(info);

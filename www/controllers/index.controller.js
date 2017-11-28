@@ -87,7 +87,7 @@
         return lightningService.getInfo();
       }).then((response) => {
         vm.info = response;
-        vm.blockchainsynced = vm.info.result.synchronized;
+        vm.blockchainsynced = vm.info.synchronized;
         $scope.$apply();
         return lightningService.getBalances();
       });

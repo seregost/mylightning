@@ -13,24 +13,24 @@
                </div>
                <div class="panel-body">
                   <div class="row">
-                     <div class="col-sm-12">
-                        <blockquote class="walletblock">
+                     <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
+                        <blockquote class="pull-left">
                            <ul class="list-inline compact">
-                              <li class="h4 mono text-right" style="width: 10em">
+                              <li class="h4 mono text-right" style="width: 11em">
                                  <b>Available </b><span class="bg-primary h6">(mBTC)</span><br>
                                  <div id="btc-funds" style="margin-top:10px" class="text-right" ng-cloak>{{vm.balances.btcfunds | number: 2}}</div>
                               </li>
                               <li>
-                                 <img src="icons/bitcoin.png" style="vertical-align:bottom;width: 50px; height: 50px;">
+                                 <img src="icons/bitcoin.png" style="vertical-align:bottom;width: 40px; height: 40px;">
                               </li>
                            </ul>
                            <ul class="list-inline compact">
-                              <li class="h4 mono text-right"  style="width: 10em">
+                              <li class="h4 mono text-right"  style="width: 11em">
                                  <b>In Channel</b> <span class="bg-primary h6">(mBTC)</span><br>
                                  <div id="lnt-funds" style="margin-top:10px;" class="text-right" ng-cloak>{{vm.balances.lntfunds | number: 2}}</div>
                               </li>
                               <li>
-                                 <img src="icons/lightning.png" style="vertical-align:bottom;width: 50px; height: 50px;">
+                                 <img src="icons/lightning.png" style="vertical-align:bottom;width: 40px; height: 40px;">
                               </li>
                            </ul>
                         </blockquote>
@@ -51,14 +51,14 @@
                       <p ng-cloak style="text-align:center">
                         <a href="javascript:void(0)" class="glyphicon glyphicon-qrcode" ng-click="vm.doqrdisplay('Bitcoin Address', vm.btcaddress)" style="text-decoration: none; text-shadow: 4px 4px 8px grey; color:orange; font-size: 100px;">
                         </a><br>
-                        Bitcoin Address
+                        Click for Bitcoin Address
                       </p>
                     </div>
                     <div class="col-xs-6 col-sm-3 col-md-2 col-lg-2" >
                       <p ng-cloak style="text-align:center">
-                        <a href="javascript:void(0)" class="glyphicon glyphicon-qrcode" ng-click="vm.doqrdisplay('Lightning Connection Code', vm.info.result.nodeId+'@'+vm.info.result.alias+':'+vm.info.result.port)" style="-webkit-transform: rotate(90deg); text-decoration: none; text-shadow: 4px 4px 8px grey; color:yellow; font-size: 100px;">
+                        <a href="javascript:void(0)" class="glyphicon glyphicon-qrcode" ng-click="vm.doqrdisplay('Lightning Connection Code', vm.info.nodeId+'@'+vm.info.alias+':'+vm.info.port)" style="-webkit-transform: rotate(90deg); text-decoration: none; text-shadow: 4px 4px 8px grey; color:yellow; font-size: 100px;">
                         </a><br>
-                        Lightning Code
+                        Click for Lightning Address
                       </p>
                     </div>
                   </div>
@@ -98,7 +98,7 @@
                      <div class="panel-body">
                         <div class="row">
                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                              <strong>Remote Node ID:</strong>
+                              <strong>Remote Lightning Address:</strong>
                               <p>{{u.node}}<br/>
                                  <span class="label label-default">{{u.alias}}</span>
                               </p>
