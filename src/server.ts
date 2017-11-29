@@ -1,43 +1,50 @@
 'use strict';
 
-const bodyParser = require('body-parser');
-const config = require('config');
-const cookieParser  = require('cookie-parser');
-const csurf = require('csurf');
-const express = require("express");
-const fs = require('fs');
-const https = require('https');
-const leveldown = require('leveldown')
-const levelup = require('levelup')
-const Lightning = require("./lightning/"+config.get("lightning-node"));
-const localStrategy = require('passport-local').Strategy;
-const logger = require("./logger");
-const passport = require('passport');
-const qr = require('qr-image');
-const session = require('express-session');
-const swaggerJSDoc = require('swagger-jsdoc');
-const WebSocket = require('ws');
-const walletv1 = require('./routes/walletv1.js')
-const LevelStore = require('express-session-level')(session);
+import * as BodyParser from 'body-parser';
+import * as Config from 'config';
+import * as FS from 'fs';
+import * as https from 'https';
+import * as CookieParser from 'cookie-parser';
+import * as CSurf from 'csurf';
+import * as Express from "express";
+import * as LevelStoreCreator from 'express-session-level';
+import * as logger from "./logger";
+import * as Passport from 'passport';
+import * as PassportLocal from 'passport-local';
+import * as Path from 'path';
+import * as Session from 'express-session';
+import * as SwaggerJSDoc from 'swagger-jsdoc';
+import * as WebSocket from 'ws';
+
+import { WalletService } from './routes/v1-wallet';
+import { UserManager } from  "./utilities/usermanager";
+
+import LevelDown from 'LevelDown';
+import LevelUp from 'LevelUp';
+
+var LevelStore = LevelStoreCreator(Session);
+
+var wallet: WalletService = new WalletService();
 
 // Implemented best practices from:
 // https://expressjs.com/en/advanced/best-practice-security.html#use-cookies-securely
 
 // Initialize levelDB storage
-var db = levelup(leveldown('./mydb'))
-var userManager = require("./utilities/usermanager").userManager;
+var db = LevelUp(LevelDown('./mydb'));
 
-passport.use(new localStrategy(
-  function(username, password, done) {
+Passport.use(new PassportLocal.Strategy(
+  function(username : string, password : string, done) {
     process.nextTick(function() {
-      var user = userManager.getuser(username)
+      var userManager: UserManager = UserManager.getInstance();
+
+      var user = userManager.GetUser(username)
 
       if(!user) {
         logger.error(username, "Login attempt for invalid user.");
         return done(null, false);
       }
       else if(!user.password) {
-        return userManager.updatepassword(username, password, (user) => {
+        return userManager.UpdatePassword(username, password, (user) => {
           if(user == null) {
             logger.error(username, "Failed first time login.")
             done(null, false);
@@ -49,7 +56,7 @@ passport.use(new localStrategy(
         });
       }
       else {
-        return userManager.verifypassword(username, password, (success,user) => {
+        return userManager.VerifyPassword(username, password, (success, user) => {
           if(success == true) {
             logger.verbose(username, "Valid login for user.");
             return done(null, user);
@@ -64,12 +71,15 @@ passport.use(new localStrategy(
   }
 ));
 
-passport.serializeUser(function(user, cb) {
+interface User {
+  id : string;
+}
+Passport.serializeUser<User,User>(function(user, cb) {
   logger.silly(user.id, "Serializing user to session.");
   cb(null, user);
 });
 
-passport.deserializeUser(function(obj, cb) {
+Passport.deserializeUser(function(obj, cb) {
   logger.silly("Attempting to load user from session.")
   cb(null, obj);
 });
@@ -90,17 +100,17 @@ var options = {
   // import swaggerDefinitions
   swaggerDefinition: swaggerDefinition,
   // path to the API docs
-  apis: ['./routes/*.js'],
+  apis: ['./src/routes/*.ts'],
 };
 
 // initialize swagger-jsdoc
-var swaggerSpec = swaggerJSDoc(options);
+var swaggerSpec = SwaggerJSDoc(options);
 
-var app = express();
+var app = Express();
 
 logger.info("Configuring express");
 var expiryDate = new Date(Date.now() + 2* 60 * 60 * 1000) // 2 hours
-const sessionParser = session({
+const sessionParser = Session({
   secret: 'FKU6LHLT',
   store: new LevelStore(db),
   resave: true,
@@ -112,12 +122,12 @@ const sessionParser = session({
 })
 
 app
-  .use(bodyParser.json()) // support json encoded bodies
-  .use(bodyParser.urlencoded({ extended: true })) // support encoded bodies
-  .use(cookieParser('PP3T7LHQ'))
+  .use(BodyParser.json()) // support json encoded bodies
+  .use(BodyParser.urlencoded({ extended: true })) // support encoded bodies
+  .use(CookieParser('PP3T7LHQ'))
   .use(sessionParser)
-  .use(passport.initialize())
-  .use(passport.session());
+  .use(Passport.initialize())
+  .use(Passport.session());
 
 // serve swagger
 app.get('/swagger.json', function(req, res) {
@@ -126,11 +136,11 @@ app.get('/swagger.json', function(req, res) {
 });
 
 app.get('/login', function(req, res){
-  res.sendfile("./www/views/login.html");
+  res.sendFile(Path.join(__dirname, "..", "www/views/login.html"));
   });
 
 app.post('/login',
-  passport.authenticate('local'),
+  Passport.authenticate('local'),
   function(req, res) {
     if(req.user != null) {
       logger.info(req.user.id, "Successfully authenticated.")
@@ -143,7 +153,7 @@ app.post('/login',
   });
 
 // Add wallet service v1.
-app.use('/rest/v1', walletv1)
+app.use('/rest/v1', wallet.Router)
 logger.info("Configured REST routes");
 
 // Blanketly require authentication beyond this point before using any other resources.
@@ -151,7 +161,7 @@ app.use('*', function(req, res, next) {
   logger.silly("Attempting session authorization.")
   if(req.isAuthenticated())
   {
-    if(userManager.getuser(req.user.id).rpcport == null) {
+    if(UserManager.getInstance().GetUser(req.user.id).rpcport == null) {
       // Redirect to new account if ports aren't set up.
       res.redirect('/newaccount')
     }
@@ -171,7 +181,7 @@ app.use('*', function(req, res, next) {
 });
 
 // Allow static access to views.
-app.use(express.static(__dirname + '/www'));
+app.use(Express.static(Path.join(__dirname, "..", "www")));
 
 app.get('*', function(req, res){
   res.sendStatus(404);
@@ -179,18 +189,19 @@ app.get('*', function(req, res){
 
 // Initialize SSL settings
 var sslOptions = {
-  key: fs.readFileSync('./certs/key.pem'),
-  cert: fs.readFileSync('./certs/cert.pem'),
-  ca: fs.readFileSync('./certs/ca.pem')
+  key: FS.readFileSync('./certs/key.pem'),
+  cert: FS.readFileSync('./certs/cert.pem'),
+  ca: FS.readFileSync('./certs/ca.pem')
 };
 
-var httpsServer = https.createServer(sslOptions, app).listen(config.get("webport"));
-logger.info("Started express server on port "+config.get("webport"));
+var httpsServer = https.createServer(sslOptions, app).listen(Config.get("webport"));
+logger.info("Started express server on port "+Config.get("webport"));
 
 // Create an instance of websocket server.
 var wss = new WebSocket.Server({
-  verifyClient: (info, done) => {
-    sessionParser(info.req, {}, () => {
+  verifyClient: (info: any, done) => {
+    var response: Express.Response = {} as any;
+    sessionParser(info.req, response, () => {
       if(info.req.session.passport == null) {
         logger.error("Login attempt with invalid session.")
         done(false);
@@ -210,9 +221,9 @@ wss.on('connection', (ws) => {
   var id = setInterval(() => {
     try {
       if(userid != null) {
-        var lightning = walletv1.lightningnodes[userid]
+        var lightning = wallet.LightningNodes[userid]
 
-        var newtransactions = lightning.newtransactions();
+        var newtransactions = lightning.NewTransactions;
         if(newtransactions.length > 0)
         {
           var message = {"method": "newtransactions", "params": newtransactions};
@@ -220,7 +231,7 @@ wss.on('connection', (ws) => {
           logger.silly(userid, "New transactions sent.");
         }
 
-        var newchannels = lightning.newchannels();
+        var newchannels = lightning.NewChannels;
         if(newchannels.length > 0)
         {
           var message = {"method": "newchannels", "params": newchannels};
@@ -228,10 +239,10 @@ wss.on('connection', (ws) => {
           logger.silly(userid, "New channels sent.");
         }
 
-        if(lightning.shouldupdate() == true)
+        if(lightning.ShouldUpdate == true)
         {
-          var message = {"method": "refresh", "params": []};
-          ws.send(JSON.stringify(message));
+          var message2 = {"method": "refresh", "params": []};
+          ws.send(JSON.stringify(message2));
           logger.silly(userid, "New refresh sent.");
         }
       }

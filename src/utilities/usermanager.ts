@@ -1,13 +1,27 @@
 'use strict'
 
-const fs = require('fs');
-const logger = require("../logger");
-const sprintf = require('sprintf').sprintf;
-const bcrypt = require("bcrypt");
+import * as fs from 'fs';
+import * as logger from "../logger";
+import * as bcrypt from "bcrypt";
 
-class UserManager {
-  constructor(userdb) {
-    this._usersById = {};
+import {sprintf} from 'sprintf';
+
+export interface User {
+  id: string;
+  rpcport: number;
+  peerport: number;
+  password: string;
+}
+
+export class UserManager {
+  // Singleton instance of user manager.
+  private static _instance: UserManager = new UserManager("users");
+
+  private _usersById: any;
+  private _userdb: string;
+
+  constructor(userdb: string) {
+    this._usersById = {}
     this._userdb = sprintf("./db/%s.json", userdb);
 
     if(fs.existsSync(this._userdb))
@@ -19,37 +33,20 @@ class UserManager {
     }
   }
 
-  // TODO: Update to support admin addition of users.
-  adduser(userid, sourceUser) {
-    var user = this._usersById[userid];
+  public static getInstance(): UserManager
+  {
+    return UserManager._instance;
+  }
 
-    if(user == null)
-    {
-        var user =
-        {
-          id: userid,
-          userName: userid,
-          displayName: sourceUser.displayName,
-          givenName: sourceUser.name.givenName,
-          photo: sourceUser.photos[0].value
-        };
-        logger.info(userid, "User record added.");
-    }
-    else {
-        // Update any data points that might ahve changed.
-        user.userName = userid,
-        user.displayName = sourceUser.displayName;
-        user.givenName = sourceUser.name.givenName;
-        user.photo = sourceUser.photos[0].value;
-        logger.info(userid, "User record updated.");
-    }
+  // TODO: Update to support admin addition of users.
+  public AddUser(userid: string, user: User): User {
     this._usersById[userid] = user;
     fs.writeFileSync(this._userdb, JSON.stringify(this._usersById, null, 2))
 
     return this._usersById[userid];
   }
 
-  updatepassword(userid, password, callback) {
+  public UpdatePassword(userid: string, password: string, callback: (User) => void): void {
     bcrypt.hash(password, 10, (err, bcryptedPassword) => {
       if(err != null)
         callback(null);
@@ -68,12 +65,12 @@ class UserManager {
     });
   }
 
-  getuser(userid) {
+  public GetUser(userid: string): User {
     return this._usersById[userid];
   }
 
-  verifypassword(userid, password, callback) {
-    var user = this._usersById[userid];
+  public VerifyPassword(userid: string, password: string, callback: (boolean, User) => void): void {
+    var user: User = this._usersById[userid];
 
     if(password == null || password == undefined)
       callback(false, null);
@@ -93,14 +90,14 @@ class UserManager {
     }
   }
 
-  each(callback) {
+  public each(callback: (string, User) => void) {
     var keys = Object.keys(this._usersById);
     for(var i=0;i<keys.length;i++){
       callback(keys[i], this._usersById[keys[i]])
     }
   }
 
-  deleteuser (userid) {
+  public DeleteUser(userid : string): boolean {
     delete this._usersById[userid];
     fs.writeFileSync(this._userdb, JSON.stringify(this._usersById, null, 2))
     logger.info(userid, "User deleted from system.");
@@ -108,5 +105,3 @@ class UserManager {
     return true;
   }
 }
-
-module.exports.userManager = new UserManager("users");

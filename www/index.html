@@ -13,7 +13,7 @@
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/sandstone/bootstrap.min.css" id="theme">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/flatly/bootstrap.min.css" id="theme">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.css">
   <link rel="stylesheet" href="css/angular-auto-complete.css">
@@ -63,7 +63,7 @@
 
 <body>
   <div id="container" ng-controller="MainController as main" style="touch-action: none;">
-    <nav class="navbar navbar-fixed-top navbar-default">
+    <nav class="navbar navbar-fixed-top navbar-default" style="border-width: 0 0 0 !important">
       <div class="container-fluid">
         <div class="navbar-header" nowrap>
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -71,9 +71,13 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">CoinBLITZ</a>
+          <a class="navbar-brand" style="margin:3px 5px 3px;padding:2px;background:radial-gradient(white, transparent);;border-radius: 30px" href="#"><img src="img/banner.png" class="img-responsive" style="height:100%;padding:4px;width:auto"/></a>
+          <!-- <ul>
+            <li></li>
+            <li><a class="navbar-brand" href="#">CoinBLITZ</a></li>
+          </ul> -->
         </div>
-        <div class="collapse navbar-collapse">
+        <div class="collapse navbar-collapse" style="margin:3px 0 0">
           <ul class="nav navbar-nav">
             <li id="#gohome" ><a ng-click="main.changescreen('gohome')" href="#!"><span class="glyphicon glyphicon-home"></span> Home</a></li>
             <li id="#gotransactions"><a ng-click="main.changescreen('gotransactions')" href="#!/transactions"><span class="glyphicon glyphicon-list" ></span> Transactions</a></li>
