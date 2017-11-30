@@ -1,9 +1,9 @@
 <div id="home" class="myfadein" ng-controller="HomeController as vm">
    <div class="container-fluid">
       <div id="homePage" class="row" ng-cloak ng-show="vm.isloaded">
-         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+         <div class="col-xs-12 col-sm-6 col-md-5 col-lg-4">
             <div class="panel panel-default">
-               <div class="panel-heading">
+               <div class="panel-heading" style="height:90px">
                   <b>
                      <h4 ng-cloak>
                      My Wallet<br>
@@ -11,33 +11,45 @@
                      <h4>
                   </b>
                </div>
-               <div class="panel-body">
+               <div class="panel-body wallet-panel" id="style-3">
                   <div class="row">
-                     <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
-                        <blockquote class="pull-left">
-                           <ul class="list-inline compact">
-                              <li class="h4 mono text-right" style="width: 11em">
-                                 <b>Available </b><span class="bg-primary h6">(mBTC)</span><br>
-                                 <div id="btc-funds" style="margin-top:10px" class="text-right" ng-cloak>{{vm.balances.btcfunds | number: 2}}</div>
-                              </li>
-                              <li>
-                                 <img src="icons/bitcoin.png" style="vertical-align:bottom;width: 40px; height: 40px;">
-                              </li>
-                           </ul>
-                           <ul class="list-inline compact">
-                              <li class="h4 mono text-right"  style="width: 11em">
-                                 <b>In Channel</b> <span class="bg-primary h6">(mBTC)</span><br>
-                                 <div id="lnt-funds" style="margin-top:10px;" class="text-right" ng-cloak>{{vm.balances.lntfunds | number: 2}}</div>
-                              </li>
-                              <li>
-                                 <img src="icons/lightning.png" style="vertical-align:bottom;width: 40px; height: 40px;">
-                              </li>
-                           </ul>
-                        </blockquote>
-                     </div>
+                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                      <div id="blockchain-notification" ng-cloak ng-show="!main.blockchainsynced" style="margin-top:10px" class="alert alert-warning blockchainwarning-container ">
+                        <h4>Synchronizing to blockchain...</h4>
+                        <ul class="list-inline compact">
+                          <li class="h5">
+                            <b>Current block height:</b><br>
+                          </li>
+                          <li class="h5">
+                            <div id="blockchain-notification-text">{{main.info.blockheight}}</div>
+                          </li>
+                        </ul>
+                      </div>
+                      <blockquote class="balancequote">
+                        <img src="img/banner2.png" ng-show="main.blockchainsynced" class="branding disabletablet fadein" style="object-fit: contain; height:150px; overflow-y: hidden">
+                         <ul class="list-inline compact">
+                            <li class="h4 mono text-right" style="width: 11em">
+                               <b>Available </b><span class="bg-primary h6">(BTC)</span><br>
+                               <div id="btc-funds" style="margin-top:10px" class="text-right" ng-cloak>{{vm.balances.btcfunds | number: 2}}</div>
+                            </li>
+                            <li >
+                               <img class="toosmall" src="icons/bitcoin.png" style="vertical-align:bottom;width: 40px; height: 40px;">
+                            </li>
+                         </ul>
+                         <ul class="list-inline compact">
+                            <li class="h4 mono text-right"  style="width: 11em">
+                               <b>In Channel</b> <span class="bg-primary h6">(BTC)</span><br>
+                               <div id="lnt-funds" style="margin-top:10px;" class="text-right" ng-cloak>{{vm.balances.lntfunds | number: 2}}</div>
+                            </li>
+                            <li>
+                               <img class="toosmall" src="icons/lightning.png" style="vertical-align:bottom;width: 40px; height: 40px;">
+                            </li>
+                         </ul>
+                      </blockquote>
+                    </div>
                   </div>
                   <div class="row">
-                     <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
+                     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                         <div class="btn-group btn-group-justified">
                            <a href="javascript:void(0)" style="white-space: pre-wrap; !important" ng-click="vm.doquickpay()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-info" ng-show="vm.hasaliases">Quick Pay</a>
                            <a href="javascript:void(0)" style="white-space: pre-wrap; !important" ng-click="vm.dosendpayment()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-success">Pay Invoice</a>
@@ -46,38 +58,36 @@
                      </div>
                   </div>
                   <br>
-                  <div class="row" >
-                    <div class="col-xs-6 col-sm-3 col-md-2 col-lg-2" >
-                      <p ng-cloak style="text-align:center">
-                        <a href="javascript:void(0)" class="glyphicon glyphicon-qrcode" ng-click="vm.doqrdisplay('Bitcoin Address', vm.btcaddress)" style="text-decoration: none; text-shadow: 4px 4px 8px grey; color:orange; font-size: 100px;">
+                  <div class="row">
+                    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" >
+                      <p ng-cloak style="text-align:center;" class="text-shadow">
+                        <a href="javascript:void(0)" class="glyphicon glyphicon-qrcode text-primary text-shadow" ng-click="vm.doqrdisplay('Bitcoin Address', vm.btcaddress)" style="text-decoration: none; font-size: 70px;">
                         </a><br>
-                        Click for Bitcoin Address
+                        <strong>Get Bitcoin Address</strong>
                       </p>
                     </div>
-                    <div class="col-xs-6 col-sm-3 col-md-2 col-lg-2" >
-                      <p ng-cloak style="text-align:center">
-                        <a href="javascript:void(0)" class="glyphicon glyphicon-qrcode" ng-click="vm.doqrdisplay('Lightning Connection Code', vm.info.nodeId+'@'+vm.info.alias+':'+vm.info.port)" style="text-shadow: 4px 4px 8px grey; text-decoration: none;  color:yellow; font-size: 100px;">
+                    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" >
+                      <p ng-cloak style="text-align:center" class="text-shadow">
+                        <a href="javascript:void(0)" class="glyphicon glyphicon-qrcode text-primary  text-shadow" ng-click="vm.doqrdisplay('Lightning Connection Code', vm.info.nodeId+'@'+vm.info.alias+':'+vm.info.port)" style="text-decoration: none; font-size: 70px;">
                         </a><br>
-                        Click for Lightning Address
+                        <strong>Get Lightning Address</strong>
                       </p>
                     </div>
                   </div>
                </div>
             </div>
          </div>
-      </div>
-      <div class="row" ng-cloak ng-show="vm.isloaded">
-         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+         <div class="col-xs-12 col-sm-6 col-md-7 col-lg-8">
             <div class="panel panel-default">
-               <div class="panel-heading">
+               <div class="panel-heading" style="height:90px">
                   <ul class="list-inline">
                      <li class="h4">
-                        Open Channels<br>
+                        Address Book<br>
                         <b class="h6">Viewing: ({{vm.selectedchannel.text}})</b>
                      </li>
                      <li>
-                        <div class="dropup" style="vertical-align:bottom;">
-                           <button type="button" ng-click="vm.doopenchannel()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-primary btn-sm">Open New</button>
+                        <div style="vertical-align:bottom;">
+                           <button type="button" ng-click="vm.doopenchannel()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-primary btn-sm">Add Address</button>
                            <div class="btn-group">
                               <button class="btn btn-primary dropdown-toggle btn-sm" type="button" data-toggle="dropdown">Filter
                               <span class="caret"></span>
@@ -93,43 +103,31 @@
                      </li>
                   </ul>
                </div>
-               <div class="panel-body">
-                  <div ng-cloak ng-repeat="u in vm.channels | filter: { state: vm.selectedchannel.filter }" class="panel panel-default shadow">
+               <div class="panel-body fixed-panel" style="min-height:100px" id="style-3">
+                  <div ng-cloak ng-repeat="u in vm.channels | filter: { state: vm.selectedchannel.filter }" class="panel panel-default">
+                     <div class="panel-heading">
+                       <strong>{{u.alias}}</strong>
+                       <span class="label label-{{u.displaytype}} pull-right" style="font-size:0.8em">Status: {{u.state}}</span>
+                     </div>
                      <div class="panel-body">
                         <div class="row">
                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                              <strong>Remote Lightning Address:</strong>
+                              <strong>Address:</strong>
                               <p>{{u.node}}<br/>
-                                 <span class="label label-default">{{u.alias}}</span>
                               </p>
                            </div>
                         </div>
                         <div class="row">
-                           <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                              <div class="progress" style="height:10px">
-                                 <div class="progress-bar progress-bar-{{u.displaytype}}" role="progressbar" style="transition:none;width: {{u.balance/u.capacity*100}}%" aria-valuenow="{{u.balance}}" aria-valuemin="0" aria-valuemax="{{u.capacity}}"></div>
+                          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                            <strong>Open Channel(s):</strong><br>
+                            <span style="display:flex; margin-top:5px">
+                              <div class="progress" style="height:20px;display:inline-block;float-left;width:100%;margin-bottom:5px">
+                                <div class="progress-bar progress-bar-{{u.displaytype}}" role="progressbar" style="transition:none;z-index:-1; width: {{u.balance/u.capacity*100}}%" aria-valuenow="{{u.balance}}" aria-valuemin="0" aria-valuemax="{{u.capacity}}"><strong class="text-shadow">{{u.balance  | number: 2}}</strong></div>
                               </div>
-                           </div>
-                        </div>
-                        <div class="row">
-                           <div class="col-xs-5 col-sm-2 col-md-2 col-lg-2">
-                              <strong>My Balance:</strong>
-                              <p>{{u.balance | number: 2}}</p>
-                           </div>
-                           <div class="col-xs-4 col-sm-2 col-md-2 col-lg-2">
-                              <strong>Limit:</strong>
-                              <p>{{u.capacity | number: 2}}</p>
-                           </div>
-                           <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
-                              <strong>Status:</strong><br>
-                              <span class="label label-{{u.displaytype}}" style="font-size:0.8em">{{u.state}}</span>
-                           </div>
-                           <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4 text-right">
-                              <div class="btn-group">
-                                 <div class="btn btn-sm btn-primary" ng-click="vm.close(u.channel)">Close</div>
-                                 <div class="btn btn-sm btn-warning" ng-click="vm.forceclose(u.channel)">Force Close</div>
-                              </div>
-                           </div>
+                              <a href="javascript:void(0)" class="glyphicon glyphicon-remove pull-right text-danger text-shadow" style="font-size:18px;display:inline-block;margin-top:-2px;margin-left:4px;text-decoration: none" ng-click="vm.close(u.channel)"></a>
+                              <!-- <a href="javascript:void(0)" class="glyphicon  glyphicon-remove pull-right text-danger text-shadow" style="font-size:18px;display:inline-block;margin-top:-1px;margin-left:4px;text-decoration: none" ng-click="vm.forceclose(u.channel)"></a> -->
+                            </span>
+                          </div>
                         </div>
                      </div>
                   </div>
