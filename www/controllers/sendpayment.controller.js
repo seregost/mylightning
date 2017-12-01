@@ -1,7 +1,7 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('SendPaymentController', ['$scope', '$element', 'broadcastService', 'lightningService', 'ModalService', 'close', function($scope, $element, broadcastService, lightningService, ModalService, close) {
+  .controller('SendPaymentController', ['$scope', '$element', 'broadcastService', 'LightningService', 'ModalService', 'close', function($scope, $element, broadcastService, lightningService, ModalService, close) {
     $scope.sendpayment = {};
     $scope.doqrscanner = () => {
       if(window.cordova != null) {

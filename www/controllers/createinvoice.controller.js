@@ -1,7 +1,7 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('CreateInvoiceController', ['$scope', '$element', 'broadcastService', 'lightningService', 'close',
+  .controller('CreateInvoiceController', ['$scope', '$element', 'broadcastService', 'LightningService', 'close',
   function($scope, $element, broadcastService, lightningService, close) {
     $scope.showinfo = () => {
       broadcastService.send("child:showalert",

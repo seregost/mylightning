@@ -2,7 +2,7 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('HomeController', ['$scope', 'lightningService', 'ModalService', '$location',
+  .controller('HomeController', ['$scope', 'LightningService', 'ModalService', '$location',
   function($scope, lightningService, ModalService, $location) {
     var vm = this;
 

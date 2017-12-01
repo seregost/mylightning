@@ -1,8 +1,7 @@
-// Main angular logic.
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('MainController', ['$scope', 'lightningService', 'ModalService', '$location',
+  .controller('MainController', ['$scope', 'LightningService', 'ModalService', '$location',
   function($scope, lightningService, ModalService, $location) {
     var vm = this;
 
@@ -114,7 +113,7 @@
     /**
     * Displays the alert box and then fade out after 5 seconds.
     */
-    function _displayalert(message, time)
+    function _displayalert(message)
     {
       $("#alertbox").finish();
       vm.alerttext = message;

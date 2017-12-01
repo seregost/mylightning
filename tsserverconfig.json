@@ -1,4 +1,5 @@
 {
+  "compileOnSave": true,
   "compilerOptions": {
     "module": "commonjs",
     "target": "es5",
@@ -8,7 +9,7 @@
     "outDir": "dist",
     "allowJs": true,
     "lib": [
-      "es2015",
+      "es6",
       "dom",
       "es7"
     ],
@@ -20,7 +21,6 @@
     }
   },
   "include": [
-    "src/**/*",
-    "www/**/*"
+    "src/**/*"
   ]
 }

@@ -181,7 +181,11 @@ app.use('*', function(req, res, next) {
 });
 
 // Allow static access to views.
-app.use(Express.static(Path.join(__dirname, "..", "www")));
+app.use(Express.static(Path.join(__dirname, "www")));
+
+app.get('/cordova.js', function(req, res){
+  res.send({})
+});
 
 app.get('*', function(req, res){
   res.sendStatus(404);

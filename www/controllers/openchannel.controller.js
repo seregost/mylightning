@@ -1,7 +1,7 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('OpenChannelController', ['$scope', '$element', 'ModalService', 'lightningService', 'close',
+  .controller('OpenChannelController', ['$scope', '$element', 'ModalService', 'LightningService', 'close',
   function($scope, $element, ModalService, lightningService, close) {
     // TODO: Fancy up validation check and add password control.
     $scope.openchannel = {};

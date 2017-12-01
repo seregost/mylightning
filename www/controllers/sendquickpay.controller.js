@@ -1,7 +1,7 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('SendQuickPayController', ['$scope', '$element', 'broadcastService', 'quickpaynodes', 'lightningService', 'ModalService', 'close', function($scope, $element, broadcastService, quickpaynodes, lightningService, ModalService, close) {
+  .controller('SendQuickPayController', ['$scope', '$element', 'broadcastService', 'quickpaynodes', 'LightningService', 'ModalService', 'close', function($scope, $element, broadcastService, quickpaynodes, lightningService, ModalService, close) {
     $scope.quickpaynodes = quickpaynodes;
 
     $scope.selecteditem = null;
