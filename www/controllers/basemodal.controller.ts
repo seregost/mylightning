@@ -1,4 +1,4 @@
-export class BaseModalController {
+export default class BaseModalController {
   constructor(private $element: any) { }
 
   public _closemodal()

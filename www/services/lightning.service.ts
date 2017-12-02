@@ -1,6 +1,7 @@
 import * as angular from 'angular';
+import WebSocketClient from '../js/websocketclient'
 
-export class LightningService {
+export default class LightningService {
   static $inject: any = ['$rootScope', '$http', LightningService];
 
   private _id: number = null;

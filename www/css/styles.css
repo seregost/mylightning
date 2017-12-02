@@ -1,4 +1,4 @@
-    body { padding-right: 0 !important; padding-top: 70px; overflow-x: hidden}
+body { padding-right: 0 !important; padding-top: 70px; overflow-x: hidden}
 
 .panel-body  {
   word-wrap: break-word;
@@ -8,26 +8,28 @@
   word-wrap: break-word;
 }
 
-@media only screen and (max-width : 360px) {
+.branding {
+  align:center !important;
+  margin-top:-5px;
+  margin-bottom:10px;
+  height:100px !important;
+}
+
+@media only screen and (max-width : 320px) {
   .toosmall {
     display: none;
   }
 }
 
-@media only screen and (max-height : 700px) {
-  .disabletablet {
-    height: 0px !important;
-    visibility: hidden;
-  }
-  .balancequote {
-    margin: 15px 0 20px !important;
-    padding: 0 0;
+@media only screen and (max-height : 670px) {
+  .branding {
+    height:75px !important;
   }
 }
 
 @media only screen and (max-width : 768px) {
-  .disabletablet {
-    display: none;
+  .branding {
+    height:75px !important;
   }
 }
 
@@ -40,10 +42,6 @@
     width:100%;
     overflow-y: hidden
   }
-  .balancequote {
-    margin: 15px 0 20px;
-    padding: 0 0;
-  }
   .fixed-panel {
     height: calc(100vh - 180px);
     overflow-y: auto;
@@ -52,16 +50,6 @@
   .wallet-panel {
     height: calc(100vh - 180px);
     overflow-y: auto;
-    padding-top:0px;
-  }
-  .branding {
-    /*-webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0));
-    -webkit-mask-size: 100% 100%;
-    -webkit-mask-repeat: no-repeat;
-    -webkit-mask-position: left top, left bottom;*/
-    align:center !important;
-    padding-left:20px;
-    padding-bottom:10px;
   }
   /*
    *  SCROLLBAR STYLE 1
