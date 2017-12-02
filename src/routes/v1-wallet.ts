@@ -177,7 +177,26 @@ interface DataResponse {
   channels?: any;
   quickpaynodes?: any;
   transactions?: any;
+  addressbook?: {[id: string]: Address};
   _csrf?: string;
+}
+
+interface Channel {
+  node: string;
+  channel: string;
+  state: string;
+  balance: number;
+  capacity: number;
+  channelpoint: string
+}
+
+interface Address {
+  id: string;
+  alias: string;
+  status: string;
+  invoiceserver: string;
+  channelserver: string;
+  channels: Array<Channel>;
 }
 
 export class WalletService {
@@ -199,6 +218,37 @@ export class WalletService {
 
   get LightningNodes() : {[id: string]: ILightning} {
     return this._lightningnodes;
+  }
+
+  private _AssembleAddressBook(channels: Array<Channel>, nodes: {[id: string]: any})
+  {
+    var addressbook: {[id: string]: Address} = {};
+    channels.forEach((channel) => {
+      var node: any = nodes[channel.node];
+      var address: Address = addressbook[channel.node];
+
+      if(address == null) {
+        address = {
+          id: channel.node,
+          alias: channel.node,
+          status: channel.state,
+          invoiceserver: null,
+          channelserver: null,
+          channels: []
+        }
+        addressbook[channel.node] = address;
+      }
+
+      address.channels.push(channel);
+      if(channel.state != "Open")
+        address.status = channel.state;
+
+      // Found an alias, so update address accordingly
+      if(node != null) {
+        address.alias = node.alias;
+      }
+    });
+    return addressbook;
   }
 
   private _AddRoutes() {
@@ -327,6 +377,7 @@ export class WalletService {
         return local.readjson(dir+'quickpaynodes.json');
       }).then((data) => {
         datapackage.quickpaynodes = data;
+        datapackage.addressbook = this._AssembleAddressBook(datapackage.channels, datapackage.quickpaynodes);
         return local.readjson(dir+'transactions.json');
       }).then((data) => {
         datapackage.transactions = data;

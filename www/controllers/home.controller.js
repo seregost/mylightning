@@ -220,6 +220,30 @@
           else
             value.displaytype = "danger"
         });
+        return lightningService.getAddressBook();
+      }).then((response) => {
+        vm.addressbook = response;
+        var keys = Object.keys(vm.addressbook);
+        for(var i=0;i<keys.length;i++){
+          var contact = vm.addressbook[keys[i]]
+          // Set display type for status.
+          if(contact.status.includes("Open"))
+            contact.displaytype = "success";
+          else if(contact.status.includes("Pending"))
+            contact.displaytype = "warning";
+          else
+            contact.displaytype = "danger"
+
+          contact.channels.forEach((channel) => {
+            if(channel.state.includes("Open"))
+              channel.displaytype = "success";
+            else if(channel.state.includes("Pending"))
+              channel.displaytype = "warning";
+            else
+              channel.displaytype = "danger"
+          });
+        }
+
         return lightningService.getInfo();
       }).then((response) => {
         vm.info = response;

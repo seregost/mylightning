@@ -96,6 +96,10 @@ export default class LightningService {
     return new Promise((resolve) => resolve(this._data.transactions));
   }
 
+  public getAddressBook(): Promise<any> {
+    return new Promise((resolve) => resolve(this._data.addressbook));
+  }
+
   public execQuickPay(password, dest, amount, memo): ng.IPromise<ng.IHttpResponse<{}>> {
     return this.$http.post("https" + this._server + 'rest/v1/quickpay',
     {
