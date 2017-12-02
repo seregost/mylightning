@@ -349,7 +349,7 @@ export class WalletService {
     try {
       var pub_key = req.body.pub_key;
 
-      var lightningnode = null;
+      var lightningnode: ILightning = null;
       var keys = Object.keys(this._lightningnodes);
       for(var i=0;i<keys.length;i++){
           var userid = keys[i];
@@ -366,10 +366,17 @@ export class WalletService {
         res.sendStatus(404);
       }
       else {
-        lightningnode.createinvoice(memo, amount, false, (response) => {
+        lightningnode.CreateInvoice(memo, amount, false)
+        .then((response) => {
           logger.verbose(userid, "/rest/v1/requestinvoice succeeded.")
-          logger.debug(userid, JSON.stringify(response));
+          logger.debug(userid, "Response:" + JSON.stringify(response));
+
           res.send(response);
+        }).catch((err) => {
+          logger.verbose(userid, "/rest/v1/requestinvoice failed.")
+          logger.debug(userid, "Response:" + JSON.stringify(err));
+
+          res.send(err);
         });
       }
     } catch (e) {
