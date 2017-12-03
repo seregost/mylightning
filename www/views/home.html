@@ -27,7 +27,7 @@
                       </div>
                       <div style="text-align:center;">
                       <div class="well" style="display:inline-block">
-                        <img src="img/banner.png" ng-show="main.blockchainsynced" class="branding" style="image-rendering: auto;width:auto; height:100px;">
+                        <img src="img/banner_100.png" ng-show="main.blockchainsynced" class="branding" style="image-rendering: auto;width:auto; height:100px;">
                          <ul class="list-inline compact">
                             <li class="h4 mono text-right" style="width: 11em">
                                <b>Available </b><span class="bg-primary h6">(BTC)</span><br>
@@ -108,28 +108,38 @@
                <div class="panel-body fixed-panel" style="min-height:100px" id="style-3">
                   <div ng-cloak ng-repeat="(key, value) in vm.addressbook" class="panel panel-default">
                      <div class="panel-heading">
+                       <a href="javascript:void(0)" style="border-radius:20px" ng-click="vm.dosendpayment()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-info"><span class="glyphicon glyphicon-flash"></span> Pay</a>
                        <strong>{{value.alias}}</strong>
-                       <span class="label label-{{value.displaytype}} pull-right" style="font-size:0.8em">Status: {{value.status}}</span>
+                       <br>
+                       <span class="label label-{{value.displaytype}} pull-right" style="font-size:0.8em">{{value.status}}</span>
                      </div>
                      <div class="panel-body">
                         <div class="row">
                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                               <strong>Address:</strong>
-                              <p>{{value.id}}<br/>
-                              </p>
+                              <!-- <span class="label label-{{value.displaytype}} pull-right" style="font-size:0.8em">Status: {{value.status}}</span> -->
+                              <p style="overflow:hidden;white-space: nowrap !important; text-overflow: ellipsis;">{{value.id}}</p>
                            </div>
                         </div>
                         <div class="row">
                           <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                            <strong>Open Channel(s):</strong><br>
+                            <strong>Channel(s):</strong>
+                            <br>
                             <span style="display:flex; margin-top:5px" ng-repeat="c in value.channels">
                               <div class="progress" style="height:20px;display:inline-block;float-left;width:100%;margin-bottom:5px">
                                 <div class="progress-bar progress-bar-{{c.displaytype}}" role="progressbar" style="transition:none;z-index:-1; width: {{c.balance/c.capacity*100}}%" aria-valuenow="{{c.balance}}" aria-valuemin="0" aria-valuemax="{{c.capacity}}"><strong class="text-shadow">{{c.balance  | number: 2}}</strong></div>
                               </div>
                               <!-- <a href="javascript:void(0)" class="glyphicon  glyphicon-remove pull-right text-danger text-shadow" style="font-size:18px;display:inline-block;margin-top:-1px;margin-left:4px;text-decoration: none" ng-click="vm.forceclose(u.channel)"></a> -->
-                              <a href="javascript:void(0)" class="glyphicon glyphicon-remove pull-right text-danger text-shadow" style="font-size:18px;display:inline-block;margin-top:-2px;margin-left:4px;text-decoration: none" ng-click="vm.close(c.channel)" ng-show="c.state.includes('Open')"></a>
+                              <a href="javascript:void(0)" class="glyphicon glyphicon-remove pull-right text-danger text-shadow" style="font-size:18px;display:inline-block;margin-left:4px;text-decoration: none" ng-click="vm.close(c.channel)" ng-show="c.state.includes('Open')"></a>
                             </span>
                           </div>
+                        </div>
+                        <div class="row">
+                           <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                              <div class="btn-group pull-left">
+                                <a href="javascript:void(0)" style="white-space: pre-wrap; !important" ng-click="vm.dosendpayment()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-sm btn-primary"><span class="glyphicon glyphicon-plus"></span> Channel</a>
+                              </div>
+                           </div>
                         </div>
                      </div>
                   </div>

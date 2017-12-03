@@ -15,6 +15,37 @@ body { padding-right: 0 !important; padding-top: 70px; overflow-x: hidden}
   height:100px !important;
 }
 
+
+/* QR Code Copy/Paste */
+/**********************/
+.code-display {
+  display: flex;
+  width: 100%;
+}
+
+.code-display > .code {
+  flex-basis:auto;
+  order: 1;
+  flex: 7;
+  word-break:break-all;
+}
+
+.code-display > .btn-copy {
+  order: 1;
+  flex: 1;
+}
+
+.code-display > .btn-copy .btn {
+  height:100%;
+  width:100%;
+  margin-left:4px;
+}
+
+.code-display > .btn-copy .btn > div {
+  font-size: 20px;
+}
+/**********************/
+
 @media only screen and (max-width : 320px) {
   .toosmall {
     display: none;

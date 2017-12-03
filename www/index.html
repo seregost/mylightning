@@ -37,11 +37,9 @@
   <script type="text/javascript" src="bundle.min.js"></script>
   <script type="text/javascript" src="cordova.js"></script>
 </head>
-
 <body>
   <div id="container" ng-controller="MainController as main" style="touch-action: none;">
     <nav class="navbar navbar-fixed-top navbar-default" style="border-width: 0 0 0 !important">
-<!-- style="background:linear-gradient(to bottom,#888888, transparent);" -->
       <div class="navbar-header" nowrap>
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
           <span class="icon-bar"></span>
@@ -49,10 +47,6 @@
           <span class="icon-bar"></span>
         </button>
         <a class="navbar-brand" style="margin:3px 4px 3px;padding:2px;border-radius: 0px;;" href="#"><img src="img/logo.png" class="img-responsive" style="image-rendering: crisp-edges;height:100%;padding:2px;width:auto"/></a>
-        <!-- <ul>
-          <li></li>
-          <li><a class="navbar-brand" href="#">CoinBLITZ</a></li>
-        </ul> -->
       </div>
       <div class="container-fluid" >
         <div class="collapse navbar-collapse" style="margin:3px 0 0">
@@ -82,7 +76,7 @@
         </table>
       </div>
       <div ng-cloak ng-show="main.serverdisconnected" class="alert alert-danger" >
-        <h4 style="margin-bottom:0px">Server connection has been lost - attempting to reconnect.</h4>
+        <h4 i18n style="margin-bottom:0px">Server connection has been lost - attempting to reconnect.</h4>
       </div>
     </div>
     <div class="{{whichWayToMove}}">

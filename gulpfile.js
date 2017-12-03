@@ -41,11 +41,11 @@ var watchedBrowserify = watchify(browserify({
       './www/controllers/home.controller.js',
       './www/controllers/openchannel.controller.js',
       './www/controllers/qrscanner.controller.js',
-      './www/controllers/sendpayment.controller.js',
+      './www/controllers/sendpayment.controller.ts',
       './www/controllers/sendquickpay.controller.js',
       './www/controllers/transactions.controller.js',
       './www/controllers/verification.controller.js',
-      './www/controllers/createinvoice.controller.js'
+      './www/controllers/createinvoice.controller.ts'
     ],
     cache: {},
     packageCache: {}

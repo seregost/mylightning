@@ -46,8 +46,16 @@
             </div>
           </div>
           <div class="row" align="center" ng-show="createinvoice.codeready">
-            <img id="invoice-image" style="width: 300px; height: 300px;"><br/><br/>
-            <p ng-cloak class="mono" align="center" style="padding:10px; width: 100%;word-wrap: break-word!important">{{createinvoice.invoicecode}}</p>
+            <img id="invoice-image" style="width: 280px; height: 280px;">
+          </div>
+          <br>
+          <div class="well code-display" ng-show="createinvoice.codeready">
+            <span ng-cloak id="invoicecode" class="mono code">{{createinvoice.invoicecode}}</span>
+            <div class="btn-copy">
+              <button data-clipboard-text="{{createinvoice.invoicecode}}" data-backdrop="static" data-keyboard="false" class="btn btn-primary btn-lg" type="button">
+                <div class="glyphicon glyphicon-copy"/>
+              </button>
+            </div>
           </div>
         </div>
         <div class="modal-footer">

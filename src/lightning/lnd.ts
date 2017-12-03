@@ -73,7 +73,7 @@ export default class LNDLighting implements ILightning {
       console.log("Current status: " + status);
     });
 
-    // Subscribe to invoices.
+    // Subscribe to channel graph changes.
     var channels = this._lightning.subscribeChannelGraph({});
     channels.on('data', (message) => {
       var shouldrefresh: boolean = false;
@@ -413,7 +413,7 @@ export default class LNDLighting implements ILightning {
     }
   }
 
-  _getaddress(callback) {
+  private _getaddress(callback) {
     this._lightning.NewWitnessAddress({}, (err, response) => {
       if(err != null) {
         logger.error(this._userid, "lnd.getaddress failed with error: " + JSON.stringify(err));
@@ -425,7 +425,7 @@ export default class LNDLighting implements ILightning {
     });
   }
 
-  _getbalance(callback) {
+  private _getbalance(callback) {
     this._lightning.WalletBalance({"witness_only": true }, (err, response) => {
       if(err != null) {
         logger.error(this._userid, "lnd.getbalance failed: " + JSON.stringify(err));
@@ -437,7 +437,7 @@ export default class LNDLighting implements ILightning {
     });
   }
 
-  _getfunds(callback) {
+  private _getfunds(callback) {
     this._lightning.ChannelBalance({}, (err, response) => {
       if(err != null) {
         logger.error(this._userid, "lnd.getfunds failed: " + JSON.stringify(err));
@@ -449,7 +449,7 @@ export default class LNDLighting implements ILightning {
     });
   }
 
-  _getinfo(callback) {
+  private _getinfo(callback) {
     this._lightning.GetInfo({}, (err, response) => {
       if(err != null) {
         logger.error(this._userid, "lnd.getinfo failed: " + JSON.stringify(err));
@@ -469,7 +469,7 @@ export default class LNDLighting implements ILightning {
     });
   }
 
-  _gettransactions(callback) {
+  private _gettransactions(callback) {
     this._lightning.getTransactions({}, (err, response) => {
       if(err != null) {
         logger.error(this._userid, "lnd._gettransactions failed: " + JSON.stringify(err));
@@ -493,7 +493,7 @@ export default class LNDLighting implements ILightning {
     });
   }
 
-  _getpayments(callback) {
+  private _getpayments(callback) {
     this._lightning.listPayments({}, (err, response) => {
       if(err != null) {
         logger.error(this._userid, "lnd._getpayments failed: " + JSON.stringify(err));
@@ -517,7 +517,7 @@ export default class LNDLighting implements ILightning {
     });
   }
 
-  _getsettledinvoices(callback) {
+  private _getsettledinvoices(callback) {
     this._lightning.listInvoices({}, (err, response) => {
       if(err != null) {
         logger.debug(this._userid, "lnd._getsettledinvoices failed: " + JSON.stringify(err));
@@ -544,7 +544,7 @@ export default class LNDLighting implements ILightning {
     });
   }
 
-  _channels(callback) {
+  private _channels(callback) {
     var channels = [];
     this._lightning.ListChannels({}, (err, response) => {
       if(err != null) {

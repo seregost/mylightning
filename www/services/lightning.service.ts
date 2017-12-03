@@ -43,7 +43,7 @@ export default class LightningService {
         console.log("Updating data due to new transactions.")
         this._data = null;
       }
-      $rootScope.$broadcast("server:message", data);
+      this.waitSync().then(() => $rootScope.$broadcast("server:message", data));
     }
 
     wsc.onclose = (evt) => {
@@ -100,7 +100,7 @@ export default class LightningService {
     return new Promise((resolve) => resolve(this._data.addressbook));
   }
 
-  public execQuickPay(password, dest, amount, memo): ng.IPromise<ng.IHttpResponse<{}>> {
+  public execQuickPay(password, dest, amount, memo): ng.IPromise<ng.IHttpResponse<any>> {
     return this.$http.post("https" + this._server + 'rest/v1/quickpay',
     {
       "_csrf" : this._data._csrf,
@@ -111,7 +111,7 @@ export default class LightningService {
     });
   }
 
-  public execCreateInvoice(amount, memo, quickpay): ng.IPromise<ng.IHttpResponse<{}>> {
+  public execCreateInvoice(amount, memo, quickpay): ng.IPromise<ng.IHttpResponse<any>> {
     return this.$http.post("https" + this._server + 'rest/v1/createinvoice',
     {
       "_csrf" : this._data._csrf,
@@ -121,7 +121,7 @@ export default class LightningService {
     });
   }
 
-  public execSendInvoice(password, invoiceid, alias): ng.IPromise<ng.IHttpResponse<{}>> {
+  public execSendInvoice(password, invoiceid, alias): ng.IPromise<ng.IHttpResponse<any>> {
     return this.$http.post("https" + this._server + 'rest/v1/sendinvoice',
     {
       "_csrf" : this._data._csrf,
@@ -131,7 +131,7 @@ export default class LightningService {
     });
   }
 
-  public execOpenChannel(remotenode, amount): ng.IPromise<ng.IHttpResponse<{}>> {
+  public execOpenChannel(remotenode, amount): ng.IPromise<ng.IHttpResponse<any>> {
     return this.$http.post("https" + this._server + 'rest/v1/openchannel',
     {
       "_csrf" : this._data._csrf,
@@ -140,7 +140,7 @@ export default class LightningService {
     });
   };
 
-  public execCloseChannel(password, channelpoint): ng.IPromise<ng.IHttpResponse<{}>> {
+  public execCloseChannel(password, channelpoint): ng.IPromise<ng.IHttpResponse<any>> {
     return this.$http.post("https" + this._server + 'rest/v1/closechannel',
     {
       "_csrf" : this._data._csrf,
@@ -149,7 +149,7 @@ export default class LightningService {
     });
   };
 
-  public execLogout(): ng.IPromise<ng.IHttpResponse<{}>> {
+  public execLogout(): ng.IPromise<ng.IHttpResponse<any>> {
     return this.$http.post("https" + this._server + 'rest/v1/logout', {"_csrf" : this._data._csrf});
   };
 }

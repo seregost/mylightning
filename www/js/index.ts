@@ -14,7 +14,6 @@ var app = {
     // $(document).on('click', '.navbar-collapse.collapse.in button:not(.navbar-toggle)', function() {
     //     $(this).closest(".navbar-collapse").collapse('hide');
     // });
-
     document.addEventListener('deviceready', this.onDeviceReady, false);
     angular.element(document).ready(function () {
       if (window.cordova) {
