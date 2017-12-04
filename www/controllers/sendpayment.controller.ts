@@ -6,32 +6,31 @@ import BroadcastService from '../services/broadcast.service'
 import LightningService from '../services/lightning.service'
 
 export class SendPaymentController extends BaseModalController {
-  static $inject: any = ['$scope', '$element', 'close', 'broadcastService', 'LightningService', 'ModalService', SendPaymentController];
+  static $inject: any = ['$scope', '$element', 'broadcastService', 'close' , 'LightningService', 'ModalService', SendPaymentController];
 
   constructor(
-    private $scope: any,
+    $scope: any,
     $element: any,
+    broadcastService: BroadcastService,
     private close: (x,y) => void,
-    private broadcastService: BroadcastService,
     private lightningService: LightningService,
     private modalService: any)
   {
-    super($element);
+    super($scope, $element, broadcastService);
     $scope.server = lightningService.getServer();
     $scope.sendpayment = {};
     $scope.close = this._close;
-    $scope.showinfo = this._showinfo;
     $scope.sendpayment = this._sendpayment;
     $scope.doqrscanner = this._doqrscanner;
 
     new Clipboard(".btn");
   }
 
-  private _showinfo = () => {
-    this.broadcastService.send("child:showalert",
-      "To submit your payment, please enter or scan the routing number provided by your vendor.  You can use your camera to scan a QR invoice image from the internet or someone else's phone.");
-  }
-
+  /**
+   * Send payment to party with optional memo.
+   * @param  string invoicecode.length>80 invoice code
+   * @return string                       memo
+   */
   private _sendpayment = () => {
     var invoicecode = this.$scope.sendpayment.invoicecode;
     var alias = this.$scope.sendpayment.alias;
@@ -80,6 +79,7 @@ export class SendPaymentController extends BaseModalController {
       this.$scope.sendpayment.error = "Invalid routing number.";
     }
   }
+
   private _doqrscanner = () => {
     if(window.cordova != null) {
       var cordova: any = window.cordova
@@ -113,6 +113,7 @@ export class SendPaymentController extends BaseModalController {
       });
     }
   }
+  
   private _close = (): void => {
     this._closemodal();
     this.close(this.$scope.sendpayment, 500); // close, but give 500ms for bootstrap to animate

@@ -1,5 +1,14 @@
+import BroadcastService from '../services/broadcast.service'
+
 export default class BaseModalController {
-  constructor(private $element: any) { }
+  constructor(protected $scope: any, private $element: any, private broadcastService : BroadcastService)
+  {
+    $scope.showinfo = this._showinfo;
+  }
+
+  private _showinfo = () => {
+    this.broadcastService.send("child:showalert", $("#helptext").html());
+  }
 
   public _closemodal()
   {

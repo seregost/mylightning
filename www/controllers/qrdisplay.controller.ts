@@ -12,13 +12,13 @@ export class QRDisplayController extends BaseModalController {
   static $inject: any = ['$scope', '$element', 'qrinfo', 'close', 'LightningService', QRDisplayController];
 
   constructor(
-    private $scope: any,
+    $scope: any,
     $element: any,
     private qrinfo: QRInfo,
     private close: (x,y) => void,
     private lightningService: LightningService)
   {
-    super($element);
+    super($scope,$element,null);
     $scope.server = lightningService.getServer();
     $scope.qrinfo = qrinfo;
     $scope.close = this._close;

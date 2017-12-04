@@ -6,27 +6,21 @@ import BroadcastService from '../services/broadcast.service'
 import LightningService from '../services/lightning.service'
 
 export class CreateInvoiceController extends BaseModalController {
-  static $inject: any = ['$scope', '$element', 'close', 'broadcastService', 'LightningService', CreateInvoiceController];
+  static $inject: any = ['$scope', '$element', 'broadcastService', 'close', 'LightningService', CreateInvoiceController];
 
   constructor(
-    private $scope: any,
+    $scope: any,
     $element: any,
+    broadcastService: BroadcastService,
     private close: (x,y) => void,
-    private broadcastService: BroadcastService,
     private lightningService: LightningService)
   {
-    super($element);
+    super($scope, $element, broadcastService);
     $scope.server = lightningService.getServer();
     $scope.close = this._close;
-    $scope.showinfo = this._showinfo;
     $scope.createinvoice = this._createinvoice;
-    
-    new Clipboard(".btn");
-  }
 
-  private _showinfo = () => {
-    this.broadcastService.send("child:showalert",
-      "To create a new invoice enter an amount and optional memo. Enabling Quick Pay will allow customers to request automatic invoices from you in the future.");
+    new Clipboard(".btn");
   }
 
   private _createinvoice = () => {

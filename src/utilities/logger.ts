@@ -1,7 +1,7 @@
 const winston = require("winston");
 
 var config = winston.config;
-module.exports = new (winston.Logger)({
+export = new (winston.Logger)({
   level: 'verbose',
   transports: [
     new (winston.transports.Console)({

@@ -1,10 +1,11 @@
 'use strict';
 
+import logger = require("../utilities/logger");
+
 import * as Express from 'express'
 import * as csurf from 'csurf';
 import * as config from 'config';
 import * as fs from 'fs';
-import * as logger from "../logger";
 import * as passport from 'passport';
 import * as qr from 'qr-image';
 

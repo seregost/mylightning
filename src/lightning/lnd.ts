@@ -1,4 +1,6 @@
 'use strict'
+import logger = require("../utilities/logger");
+
 import {ILightning} from './lightning'
 const request = require('request');
 const bitcoin = require('bitcoin');
@@ -8,7 +10,6 @@ const ByteBuffer = require('bytebuffer');
 const qr = require('qr-image');
 const fs = require('fs');
 const sortJsonArray = require('sort-json-array');
-const logger = require("../logger");
 const grpc = require('grpc');
 
 // sudo sysctl -w net.ipv4.conf.p4p1.route_localnet=1
@@ -253,7 +254,7 @@ export default class LNDLighting implements ILightning {
           reject({"error":{"message":err.message}});
         }
         else {
-          var quickpay_request = `${response.payment_request}@${config.get("webserver")}}:${config.get("webport")}`;
+          var quickpay_request = `${response.payment_request}@${config.get("webserver")}:${config.get("webport")}`;
 
           if(quickpay == true) {
             response.payment_request = quickpay_request;

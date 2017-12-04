@@ -42,7 +42,7 @@ var watchedBrowserify = watchify(browserify({
       './www/controllers/openchannel.controller.js',
       './www/controllers/qrscanner.controller.js',
       './www/controllers/sendpayment.controller.ts',
-      './www/controllers/sendquickpay.controller.js',
+      './www/controllers/sendquickpay.controller.ts',
       './www/controllers/transactions.controller.js',
       './www/controllers/verification.controller.js',
       './www/controllers/createinvoice.controller.ts'

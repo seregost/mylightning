@@ -1,4 +1,5 @@
 'use strict';
+import logger = require("./utilities/logger");
 
 import * as BodyParser from 'body-parser';
 import * as Config from 'config';
@@ -8,7 +9,6 @@ import * as CookieParser from 'cookie-parser';
 import * as CSurf from 'csurf';
 import * as Express from "express";
 import * as LevelStoreCreator from 'express-session-level';
-import * as logger from "./logger";
 import * as Passport from 'passport';
 import * as PassportLocal from 'passport-local';
 import * as Path from 'path';

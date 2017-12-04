@@ -108,7 +108,7 @@
                <div class="panel-body fixed-panel" style="min-height:100px" id="style-3">
                   <div ng-cloak ng-repeat="(key, value) in vm.addressbook" class="panel panel-default">
                      <div class="panel-heading">
-                       <a href="javascript:void(0)" style="border-radius:20px" ng-click="vm.dosendpayment()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-info"><span class="glyphicon glyphicon-flash"></span> Pay</a>
+
                        <strong>{{value.alias}}</strong>
                        <br>
                        <span class="label label-{{value.displaytype}} pull-right" style="font-size:0.8em">{{value.status}}</span>
@@ -137,6 +137,7 @@
                         <div class="row">
                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                               <div class="btn-group pull-left">
+                                <a href="javascript:void(0)" ng-click="vm.dosendpayment()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-sm btn-info"><span class="glyphicon glyphicon-flash"></span> Pay</a>
                                 <a href="javascript:void(0)" style="white-space: pre-wrap; !important" ng-click="vm.dosendpayment()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-sm btn-primary"><span class="glyphicon glyphicon-plus"></span> Channel</a>
                               </div>
                            </div>

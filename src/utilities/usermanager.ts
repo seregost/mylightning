@@ -1,7 +1,8 @@
 'use strict'
 
+import logger = require("../utilities/logger");
+
 import * as fs from 'fs';
-import * as logger from "../logger";
 import * as bcrypt from "bcrypt";
 
 import {sprintf} from 'sprintf';

@@ -1,6 +1,9 @@
 <!-- Create Invoice Modal -->
 <div class="modal" id="createinvoicemodal" style="top:30px" data-backdrop="static" data-keyboard="false">
   <form id="createinvoiceform" name="createinvoiceform" class="container" novalidate>
+    <span id="helptext" hidden>
+      To create a new invoice enter an amount and optional memo. Enabling <u>Quick Pay</u> will allow customers to request automatic invoices from you in the future.
+    </span>
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -49,7 +52,7 @@
             <img id="invoice-image" style="width: 280px; height: 280px;">
           </div>
           <br>
-          <div class="well code-display" ng-show="createinvoice.codeready">
+          <div class="code-display" ng-show="createinvoice.codeready">
             <span ng-cloak id="invoicecode" class="mono code">{{createinvoice.invoicecode}}</span>
             <div class="btn-copy">
               <button data-clipboard-text="{{createinvoice.invoicecode}}" data-backdrop="static" data-keyboard="false" class="btn btn-primary btn-lg" type="button">
