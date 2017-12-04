@@ -1,5 +1,5 @@
 <!-- QR Code Modal -->
-<div class="modal fade" id="imagemodal" style="top:30px" data-backdrop="static" data-keyboard="false">
+<div class="modal" id="imagemodal" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -7,8 +7,16 @@
         <h4 class="modal-title" id="modallabel">{{qrinfo.caption}}</h4>
       </div>
       <div class="modal-body" align="center">
-        <img src="{{server}}rest/v1/getqrimage?inputcode={{qrinfo.inputcode}}" id="imagepreview" style="width: 300px; height: 300px;" ><br/><br/>
-        <p ng-cloak class="mono" align="center" style="width: 100%;word-wrap: break-word!important"><strong>{{qrinfo.inputcode}}</strong></p>
+        <img src="{{server}}rest/v1/getqrimage?inputcode={{qrinfo.inputcode}}" id="imagepreview" style="width: 300px; height: 300px;" >
+        <!-- <p ng-cloak class="mono" align="center" style="width: 100%;word-wrap: break-word!important"><strong>{{qrinfo.inputcode}}</strong></p> -->
+        <div class="code-display well" style="width: 300px">
+          <span ng-cloak id="invoicecode" class="mono code text-left">{{qrinfo.inputcode}}</span>
+          <div class="btn-copy">
+            <button data-clipboard-text="{{qrinfo.inputcode}}" data-backdrop="static" data-keyboard="false" class="btn btn-primary btn-lg" type="button">
+              <div class="glyphicon glyphicon-copy"/>
+            </button>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-success" ng-click="close()">Close</button>

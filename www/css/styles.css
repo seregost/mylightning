@@ -15,7 +15,28 @@ body { padding-right: 0 !important; padding-top: 70px; overflow-x: hidden}
   height:100px !important;
 }
 
+/* Progress bar */
+/**********************/
+.progress {
+  height:20px;
+  display:inline-block;
+  float-left;
+  width:100%;
+  margin-bottom:5px;
+  text-align:center;
+}
 
+.progress-value {
+    color:white;
+    position:absolute;
+    right:0;
+    left:0;
+}
+
+.progress-bar {
+  transition:none;
+  z-index:-1;
+}
 /* QR Code Copy/Paste */
 /**********************/
 .code-display {
@@ -28,6 +49,7 @@ body { padding-right: 0 !important; padding-top: 70px; overflow-x: hidden}
   order: 1;
   flex: 7;
   word-break:break-all;
+  vertical-align: middle;
 }
 
 .code-display > .btn-copy {

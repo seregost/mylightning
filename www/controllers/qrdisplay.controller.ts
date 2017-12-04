@@ -1,4 +1,5 @@
 import * as angular from 'angular';
+import * as Clipboard from 'clipboard';
 
 import BaseModalController from './basemodal.controller'
 import LightningService from '../services/lightning.service'
@@ -22,6 +23,8 @@ export class QRDisplayController extends BaseModalController {
     $scope.server = lightningService.getServer();
     $scope.qrinfo = qrinfo;
     $scope.close = this._close;
+
+    new Clipboard(".btn");
   }
 
   public _close = (): void => {

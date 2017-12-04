@@ -126,8 +126,9 @@
                             <strong>Channel(s):</strong>
                             <br>
                             <span style="display:flex; margin-top:5px" ng-repeat="c in value.channels">
-                              <div class="progress" style="height:20px;display:inline-block;float-left;width:100%;margin-bottom:5px">
-                                <div class="progress-bar progress-bar-{{c.displaytype}}" role="progressbar" style="transition:none;z-index:-1; width: {{c.balance/c.capacity*100}}%" aria-valuenow="{{c.balance}}" aria-valuemin="0" aria-valuemax="{{c.capacity}}"><strong class="text-shadow">{{c.balance  | number: 2}}</strong></div>
+                              <div class="progress">
+                                <strong class="progress-value">{{c.balance  | number: 2}}</strong>
+                                <div class="progress-bar progress-bar-{{c.displaytype}}" role="progressbar" style="width: {{c.balance/c.capacity*100}}%" aria-valuenow="{{c.balance}}" aria-valuemin="0" aria-valuemax="{{c.capacity}}"></div>
                               </div>
                               <!-- <a href="javascript:void(0)" class="glyphicon  glyphicon-remove pull-right text-danger text-shadow" style="font-size:18px;display:inline-block;margin-top:-1px;margin-left:4px;text-decoration: none" ng-click="vm.forceclose(u.channel)"></a> -->
                               <a href="javascript:void(0)" class="glyphicon glyphicon-remove pull-right text-danger text-shadow" style="font-size:18px;display:inline-block;margin-left:4px;text-decoration: none" ng-click="vm.close(c.channel)" ng-show="c.state.includes('Open')"></a>
