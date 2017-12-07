@@ -224,6 +224,23 @@ export class WalletService {
   private _AssembleAddressBook(channels: Array<Channel>, nodes: {[id: string]: any})
   {
     var addressbook: {[id: string]: Address} = {};
+    // Add all nodes to the address book.
+    var keys = Object.keys(nodes);
+    for(var i=0;i<keys.length;i++){
+        var nodeid = keys[i];
+        var node = nodes[nodeid];
+
+        var address: Address = {
+          id: nodeid,
+          alias: node.alias,
+          status: "Open",
+          invoiceserver: node.server,
+          channelserver: null,
+          channels: []
+        }
+        addressbook[nodeid] = address;
+    }
+
     channels.forEach((channel) => {
       var node: any = nodes[channel.node];
       var address: Address = addressbook[channel.node];
@@ -310,6 +327,7 @@ export class WalletService {
     local._router.post('/sendinvoice', this.SendInvoice);
     local._router.post('/quickpay', this.QuickPay);
     local._router.post('/createinvoice', this.CreateInvoice);
+    local._router.post('/addcontact', this.AddContact)
     local._router.post('/openchannel', this.OpenChannel);
     local._router.post('/closechannel', this.CloseChannel)
     local._router.get('/getqrimage', this.GetQRImage)
@@ -647,6 +665,33 @@ export class WalletService {
 
     } catch (e) {
       logger.error(userid, "Exception occurred in /rest/v1/quickpay: " + e.message);
+      res.sendStatus(500);
+    }
+  }
+
+  /**
+   * TODO: Swagger DOC
+   */
+  public AddContact = (req: Express.Request, res: Express.Response) : void => {
+    try {
+      var userid = req.user.id;
+      var alias = req.body.alias;
+      var nodeid = req.body.nodeid;
+      var server = req.body.server;
+
+      this._lightningnodes[userid].AddContact(alias, nodeid, server)
+      .then((response) => {
+        logger.verbose(userid, "/rest/v1/addcontact succeeded.")
+        res.send(response);
+
+      }).catch((err) => {
+        logger.verbose(userid, "/rest/v1/addcontact failed.")
+
+        res.send(err);
+      });
+
+    } catch (e) {
+      logger.error(userid, "Exception occurred in /rest/v1/addcontact: " + e.message);
       res.sendStatus(500);
     }
   }

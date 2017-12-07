@@ -49,7 +49,7 @@ export default class LNDLighting implements ILightning {
 
     this._refresh();
 
-    setInterval(() => {this._refresh();}, 10000);
+    setInterval(() => {this._refresh();}, 60000);
 
     // Subscribe to invoices.
     var invoices = this._lightning.subscribeInvoices({});
@@ -63,7 +63,7 @@ export default class LNDLighting implements ILightning {
       });
       logger.verbose(this._userid, "Detected a new payment.")
       logger.debug(JSON.stringify(message));
-      this._refresh();
+      setTimeout(() => {this._refresh()}, 3000);
     });
     invoices.on('end', function() {
       // The server has finished sending
@@ -94,7 +94,7 @@ export default class LNDLighting implements ILightning {
         }
       });
       if(shouldrefresh)
-        this._refresh();
+        setTimeout(() => {this._refresh()}, 3000);
     });
     channels.on('end', function() {
       // The server has finished sending
@@ -157,6 +157,7 @@ export default class LNDLighting implements ILightning {
         }
         else {
           logger.debug(this._userid, "lnd.sendpayment succeeded.");
+          setTimeout(() => {this._refresh()}, 3000);
           resolve({});
         }
       });
@@ -180,7 +181,7 @@ export default class LNDLighting implements ILightning {
           }
           else {
             logger.debug(this._userid, "lnd.sendinvoice succeeded.");
-            this._refresh();
+            setTimeout(() => {this._refresh()}, 3000);
             resolve({});
           }
         });
@@ -266,6 +267,30 @@ export default class LNDLighting implements ILightning {
     });
   }
 
+  public AddContact(alias: string, nodeid: string, server: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      // strip nodepath.
+      var nodepath = nodeid.split("@");
+
+      // Add contact to address book with alias.
+      if(nodepath.length < 1) {
+        logger.error(this._userid, "lnd.addcontact failed with invalid nodeid.");
+        logger.info(alias, "/", nodeid, "/", server)
+        reject();
+      }
+      else {
+        // Set server if specified.
+        this._quickpaynodes[nodepath[0]] = {"alias": alias, "server": server};
+
+        var dir = './db/'+this._userid+'/';
+        fs.writeFileSync(dir+'quickpaynodes.json', JSON.stringify(this._quickpaynodes, null, 2));
+
+        setTimeout(() => {this._refresh()}, 3000);
+        resolve();
+      }
+    });
+  }
+
   public OpenChannel(nodeid: string, amount: number): Promise<any> {
     return new Promise((resolve, reject) => {
       var nodepath = nodeid.split("@");
@@ -331,6 +356,7 @@ export default class LNDLighting implements ILightning {
 
             call.on('data', (message) => {
               logger.info(this._userid, "lnd.closechannel succeeded.  Channel closed.");
+              setTimeout(() => {this._refresh()}, 3000);
               resolve(message);
             });
 
@@ -372,6 +398,7 @@ export default class LNDLighting implements ILightning {
           local._pubkey = response.nodeId;
           fs.writeFileSync(dir+'info.json', JSON.stringify(response));
 
+          local._hasupdate = true;
           local._getbalance((balance) => {
             local._getfunds((funds) => {
               var balances = {
@@ -380,26 +407,28 @@ export default class LNDLighting implements ILightning {
               };
               fs.writeFileSync(dir+'balances.json', JSON.stringify(balances));
 
+              local._hasupdate = true;
               local._channels((channels) => {
                 sortJsonArray(channels, 'channel');
                 fs.writeFileSync(dir+'channels.json', JSON.stringify(channels));
 
-                local._gettransactions((transactions) => {
-                  local._getpayments((payments) => {
-                    local._getsettledinvoices((invoices) => {
-                      if(payments.error == null)
-                        transactions = transactions.concat(payments);
-                      if(invoices.error == null)
-                        transactions = transactions.concat(invoices);
-
-                      sortJsonArray(transactions, 'time_stamp', 'des');
-                      transactions = transactions.slice(0,50);
-                      fs.writeFileSync(dir+'transactions.json', JSON.stringify(transactions));
-
-                      local._hasupdate = true;
-                    });
-                  });
-                });
+                local._hasupdate = true;
+                // local._gettransactions((transactions) => {
+                //   local._getpayments((payments) => {
+                //     local._getsettledinvoices((invoices) => {
+                //       if(payments.error == null)
+                //         transactions = transactions.concat(payments);
+                //       if(invoices.error == null)
+                //         transactions = transactions.concat(invoices);
+                //
+                //       sortJsonArray(transactions, 'time_stamp', 'des');
+                //       transactions = transactions.slice(0,50);
+                //       fs.writeFileSync(dir+'transactions.json', JSON.stringify(transactions));
+                //
+                //       local._hasupdate = true;
+                //     });
+                //   });
+                // });
               });
             });
           });
@@ -457,13 +486,16 @@ export default class LNDLighting implements ILightning {
         callback({"error":{"message":err}});
         return;
       }
+      var addresscode = `${response.identity_pubkey}@${config.get("netip")}:${this._peerport}@${config.get("webserver")}:${config.get("webport")}`;
+
       var info =
       {
         "nodeId": response.identity_pubkey,
         "alias": config.get("netip"),
         "port": this._peerport,
         "synchronized": response.synced_to_chain,
-        "blockheight": response.block_height
+        "blockheight": response.block_height,
+        "addresscode": addresscode
       }
       logger.silly(this._userid, "lnd.getinfo succeeded.");
       callback(info);
@@ -652,13 +684,12 @@ export default class LNDLighting implements ILightning {
           "node_pubkey_string": pub_key,
           "local_funding_amount": amount
         }, (err, response) => {
-          if(err != null)
-          {
+          if(err != null) {
             logger.error(this._userid, "lnd._opennewchannel failed: " + JSON.stringify(err));
             reject({"error":{"message":err}});
           }
           else {
-            this._refresh();
+            setTimeout(() => {this._refresh()}, 3000);
             resolve({response});
           }
       });

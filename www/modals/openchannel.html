@@ -5,30 +5,37 @@
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" ng-click="close()" class="close" ><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-          <h4 class="modal-title" id="modallabel">Open New Channel</h4>
+          <h4 class="modal-title" id="modallabel">Add Contact</h4>
         </div>
         <div class="modal-body">
           <div class="row">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 form-group">
               <div class="form-group">
                 <div class"form-control">
-                  <label for="remotenode">Remote Lightning Address:</label>
+                  <label for="remotenode">Contact Address:</label>
                   <div class="input-group input-group" style="height:100%">
-                    <textarea rows="2" id="remotenode" name="remotenode" ng-model="openchannel.remotenode" class="form-control" required></textarea>
+                    <textarea rows="2" id="nodeid" name="nodeid" ng-model="openchannel.nodeid" class="form-control" required></textarea>
                     <div class="input-group-btn">
                       <button style="height:100%" ng-click="doqrscanner();" data-backdrop="static" data-keyboard="false" class="btn btn-primary btn-lg" type="button"><div class=" glyphicon glyphicon-qrcode"/></button>
                     </div>
                   </div>
-                  <span style="color:red;" ng-show="openchannelform.remotenode.$error.required ">Please scan or enter the remote lightning address.</span>
+                  <span style="color:red;" ng-show="openchannelform.nodeid.$error.required ">Please scan or enter your contact's lightning address.</span>
                 </div>
               </div>
               <div class="form-group">
+                <div class"form-control">
+                  <label for="amount">Contact Name</label>
+                  <input type="text" class="form-control" id="alias" name="alias" ng-model="openchannel.alias" required>
+                  <span style="color:red;" ng-show="openchannelform.alias.$error.required ">Please enter the name of your contact.</span>
+                </div>
+              </div>
+              <!-- <div class="form-group">
                 <div class"form-control">
                   <label for="amount">Funding Amount</label>
                   <input type="number" class="form-control" id="amount" name="amount" ng-model="openchannel.amount" min="0.001" required>
                   <span style="color:red;" ng-show="openchannelform.amount.$error.min||openchannelform.amount.$error.required ">Amount must be greater than 0.001</span>
                 </div>
-              </div>
+              </div> -->
               <div class="alert alert-danger" ng-show="openchannel.haserror">
                 <h4>Network Error:</h4>
                 <p>{{openchannel.error}}</p>

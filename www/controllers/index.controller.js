@@ -14,6 +14,11 @@
     // Function binding
     vm.refresh = refresh;
     vm.changescreen = changescreen;
+    vm.doquickpay = doquickpay;
+    vm.docreateinvoice = docreateinvoice;
+    vm.dosendpayment = dosendpayment;
+    vm.doqrdisplay = doqrdisplay;
+
     vm.dologout = dologout;
 
     vm.refresh();
@@ -79,16 +84,115 @@
     });
 
     /**
+    * View event to run the quick pay process.
+    * @param {string} pub_key - public key of the selected alias.
+    */
+    function doquickpay(pub_key) {
+      vm.selectedalias = vm.quickpaynodes[pub_key];
+      ModalService.showModal({
+        templateUrl: "modals/sendquickpay.html",
+        controller: "SendQuickPayController",
+        inputs: {
+          quickpaynodes: vm.quickpaynodes,
+          selectednodeid: pub_key
+        }
+      }).then(function(modal) {
+          modal.element.modal();
+          modal.close.then(function(result) {
+            vm.quickpay = result;
+            if(vm.quickpay.success == true)
+            {
+              $scope.$emit("child:showalert",
+                "You sent a payment to '"+vm.quickpay.alias+"' in the amount of: "+vm.quickpay.amount.toFixed(2));
+              vm.refresh();
+            }
+        });
+      });
+    }
+
+    /**
+    * Generate an invoice with QR code and id.
+    */
+    function docreateinvoice() {
+      ModalService.showModal({
+        templateUrl: "modals/createinvoice.html",
+        controller: "CreateInvoiceController",
+      }).then(function(modal) {
+          modal.element.modal();
+          modal.close.then(function(result) {
+        });
+      });
+    }
+
+    /**
+    * Send a payment with the scanned QR code.
+    */
+    function dosendpayment() {
+      ModalService.showModal({
+        templateUrl: "modals/sendpayment.html",
+        controller: "SendPaymentController",
+      }).then(function(modal) {
+          modal.element.modal();
+          modal.close.then(function(result) {
+            vm.sendpayment = result;
+            if(vm.sendpayment.success == true)
+            {
+              $scope.$emit("child:showalert",
+                "You have successfully paid the invoice.");
+              vm.refresh();
+            }
+        });
+      });
+    }
+
+    function doqrdisplay(caption, qrcode)
+    {
+      ModalService.showModal({
+        templateUrl: "modals/qrdisplay.html",
+        controller: "QRDisplayController",
+        inputs: {
+          qrinfo : {"caption": caption, "inputcode": qrcode}
+        }
+      }).then(function(modal) {
+          modal.element.modal();
+          modal.close.then(function(result) {
+        });
+      });
+    }
+
+    /**
     * Refresh data from the server.  Called when page loads or lightning:message events happen.
     */
     function refresh(){
       lightningService.waitSync().then(() => {
+        return lightningService.getQuickPayNodes();
+      }).then((aliases) => {
+        if(Object.keys(aliases).length > 0)
+          vm.hasaliases = true;
+        vm.quickpaynodes = aliases;
+
+        // Set public keys.
+        var keys = Object.keys(vm.quickpaynodes);
+        for(var i=0;i<keys.length;i++){
+          vm.quickpaynodes[keys[i]].pub_key = keys[i];
+        }
         return lightningService.getInfo();
       }).then((response) => {
         vm.info = response;
         vm.blockchainsynced = vm.info.synchronized;
         $scope.$apply();
         return lightningService.getBalances();
+      }).then((response) => {
+        vm.balances = {"btcfunds": response.btcfunds, "lntfunds": response.lntfunds};
+        return lightningService.getUsers()
+      }).then((response) => {
+        vm.user = response;
+        return lightningService.getAddress();
+      }).then((response) => {
+        vm.btcaddress = response;
+        vm.isloaded = true;
+
+        $scope.$apply();
       });
     }
 
@@ -125,13 +229,15 @@
     */
     function _displaynotification(msgtitle, message)
     {
-      if(cordova.plugins.notification != null)
-      {
-        cordova.plugins.notification.local.schedule({
-            title: msgtitle,
-            text: message,
-            foreground: true
-        });
+      if(cordova != null) {
+        if(cordova.plugins.notification != null)
+        {
+          cordova.plugins.notification.local.schedule({
+              title: msgtitle,
+              text: message,
+              foreground: true
+          });
+        }
       }
     }
 
@@ -140,7 +246,7 @@
     */
     function _registerTransitions()
     {
-      var hammertime = new Hammer(document.getElementById('container'));
+      var hammertime = new Hammer(document.getElementById('movableview'));
 
       hammertime.on('swipeleft', function(ev) {
         $scope.whichWayToMove = 'slide_from_left_to_right';

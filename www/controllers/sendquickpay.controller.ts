@@ -6,13 +6,14 @@ import LightningService from '../services/lightning.service'
 import BroadcastService from '../services/broadcast.service'
 
 export class SendQuickPayController extends BaseModalController {
-  static $inject: any = ['$scope', '$element', 'broadcastService', 'quickpaynodes', 'close', 'LightningService', 'ModalService', SendQuickPayController];
+  static $inject: any = ['$scope', '$element', 'broadcastService', 'quickpaynodes', 'selectednodeid', 'close', 'LightningService', 'ModalService', SendQuickPayController];
 
   constructor(
     $scope: any,
     $element: any,
     broadcastService: BroadcastService,
     private quickpaynodes: any,
+    private selectednodeid: string,
     private close: (x,y) => void,
     private lightningService: LightningService,
     private modalService: any)
@@ -24,6 +25,13 @@ export class SendQuickPayController extends BaseModalController {
 
     $scope.quickpaynodes = quickpaynodes;
     $scope.selecteditem = null;
+    $scope.preselected = false;
+
+    if(selectednodeid != null) {
+      $scope.selecteditem = quickpaynodes[selectednodeid];
+      $scope.preselected = true;
+    }
+
     $scope.aliasoptions = {
       minimumChars: 0,
       activateOnFocus: true,
@@ -38,14 +46,14 @@ export class SendQuickPayController extends BaseModalController {
       selectedTextAttr: 'alias',
       itemTemplateUrl : 'views/alias-list-item.tpl.html',
       itemSelected: function (item) {
-        $scope.selecteditem = item;
+        $scope.selecteditem = item.item;
         $scope.quickpay.alias = item.item.alias;
       }
     }
   }
 
   public _sendquickpay = () => {
-    var dest = this.$scope.selecteditem.item.pub_key;
+    var dest = this.$scope.selecteditem.pub_key;
     var memo = this.$scope.quickpay.memo;
     var amount = this.$scope.quickpay.amount;
 
@@ -55,7 +63,7 @@ export class SendQuickPayController extends BaseModalController {
         templateUrl: "modals/verification.html",
         controller: "VerificationController",
         inputs: {
-          message: "Please enter your PIN to confirm that you wish to pay " + amount.toFixed(2) + " to '" + this.$scope.selecteditem.item.alias + ".'"
+          message: "Please enter your PIN to confirm that you wish to pay " + amount.toFixed(2) + " to '" + this.$scope.selecteditem.alias + ".'"
         }
       }).then((modal) => {
         // The modal object has the element built, if this is a bootstrap modal

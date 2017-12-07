@@ -1,153 +1,60 @@
 <div id="home" class="myfadein" ng-controller="HomeController as vm">
-   <div class="container-fluid">
-      <div id="homePage" class="row" ng-cloak ng-show="vm.isloaded">
-         <div class="col-xs-12 col-sm-6 col-md-5 col-lg-4">
-            <div class="panel panel-default">
-               <div class="panel-heading" style="height:90px">
-                  <b>
-                     <h4 ng-cloak>
-                     My Wallet<br>
-                     <b class="h6">{{vm.user.id}}</b>
-                     <h4>
-                  </b>
-               </div>
-               <div class="panel-body wallet-panel" id="style-3">
-                  <div class="row">
-                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                      <div id="blockchain-notification" ng-cloak ng-show="!main.blockchainsynced" style="margin-top:10px" class="alert alert-warning blockchainwarning-container ">
-                        <h4>Synchronizing to blockchain...</h4>
-                        <ul class="list-inline compact">
-                          <li class="h5">
-                            <b>Current block height:</b><br>
-                          </li>
-                          <li class="h5">
-                            <div id="blockchain-notification-text">{{main.info.blockheight}}</div>
-                          </li>
-                        </ul>
-                      </div>
-                      <div style="text-align:center;">
-                      <div class="well" style="display:inline-block">
-                        <img src="img/banner_100.png" ng-show="main.blockchainsynced" class="branding" style="image-rendering: auto;width:auto; height:100px;">
-                         <ul class="list-inline compact">
-                            <li class="h4 mono text-right" style="width: 11em">
-                               <b>Available </b><span class="bg-primary h6">(BTC)</span><br>
-                               <div id="btc-funds" style="margin-top:10px" class="text-right" ng-cloak>{{vm.balances.btcfunds | number: 2}}</div>
-                            </li>
-                            <li >
-                               <img class="toosmall" src="icons/bitcoin.png" style="vertical-align:bottom;width: 40px; height: 40px;">
-                            </li>
-                         </ul>
-                         <ul class="list-inline compact">
-                            <li class="h4 mono text-right"  style="width: 11em">
-                               <b>In Channel</b> <span class="bg-primary h6">(BTC)</span><br>
-                               <div id="lnt-funds" style="margin-top:10px;" class="text-right" ng-cloak>{{vm.balances.lntfunds | number: 2}}</div>
-                            </li>
-                            <li>
-                               <img class="toosmall" src="icons/lightning.png" style="vertical-align:bottom;width: 40px; height: 40px;">
-                            </li>
-                         </ul>
-                      </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row">
-                     <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                        <div class="btn-group btn-group-justified">
-                           <a href="javascript:void(0)" style="white-space: pre-wrap; !important" ng-click="vm.doquickpay()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-info" ng-show="vm.hasaliases">Quick Pay</a>
-                           <a href="javascript:void(0)" style="white-space: pre-wrap; !important" ng-click="vm.dosendpayment()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-success">Pay Invoice</a>
-                           <a href="javascript:void(0)" style="white-space: pre-wrap; !important" ng-click="vm.docreateinvoice()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-warning">Create Invoice</a>
-                        </div>
-                     </div>
-                  </div>
-                  <br>
-                  <div class="row">
-                    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" >
-                      <p ng-cloak style="text-align:center;" class="text-shadow">
-                        <a href="javascript:void(0)" class="glyphicon glyphicon-qrcode text-primary text-shadow" ng-click="vm.doqrdisplay('Bitcoin Address', vm.btcaddress)" style="text-decoration: none; font-size: 70px;">
-                        </a><br>
-                        <strong>Get Bitcoin Address</strong>
-                      </p>
-                    </div>
-                    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" >
-                      <p ng-cloak style="text-align:center" class="text-shadow">
-                        <a href="javascript:void(0)" class="glyphicon glyphicon-qrcode text-primary  text-shadow" ng-click="vm.doqrdisplay('Lightning Connection Code', vm.info.nodeId+'@'+vm.info.alias+':'+vm.info.port)" style="text-decoration: none; font-size: 70px;">
-                        </a><br>
-                        <strong>Get Lightning Address</strong>
-                      </p>
-                    </div>
-                  </div>
-               </div>
-            </div>
+  <div class="panel panel-default">
+     <div class="panel-heading" style="height:90px;">
+       <div class="row">
+         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 vertical-align">
+           <span class="h4" style="position:absolute; top:0; flex:7">Address Book</span>
+           <!-- <b class="h6">Viewing: ({{vm.selectedchannel.text}})</b> -->
+           <button style="flex:1" type="button" ng-click="vm.doopenchannel()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-primary pull-right btn-sm">Add Contact</button>
          </div>
-         <div class="col-xs-12 col-sm-6 col-md-7 col-lg-8">
-            <div class="panel panel-default">
-               <div class="panel-heading" style="height:90px">
-                  <ul class="list-inline">
-                     <li class="h4">
-                        Address Book<br>
-                        <b class="h6">Viewing: ({{vm.selectedchannel.text}})</b>
-                     </li>
-                     <li class="pull-right h4">
-                        <div>
-                           <button type="button" ng-click="vm.doopenchannel()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-primary btn-sm">Add Contact</button>
-                           <div class="btn-group ">
-                              <button class="btn btn-primary dropdown-toggle btn-sm" type="button" data-toggle="dropdown">Filter
-                              <span class="caret"></span>
-                              </button>
-                              <ul class="dropdown-menu">
-                                 <li><a href="javascript:void(0)" ng-click="vm.channelfilterselected('', 'All')">All</a></li>
-                                 <li><a href="javascript:void(0)" ng-click="vm.channelfilterselected('Open', 'Open')">Open</a></li>
-                                 <li><a href="javascript:void(0)" ng-click="vm.channelfilterselected('Pending', 'Pending')">Pending</a></li>
-                                 <li><a href="javascript:void(0)" ng-click="vm.channelfilterselected('Closing', 'Closing')">Closing</a></li>
-                              </ul>
-                           </div>
-                        </div>
-                     </li>
-                  </ul>
-               </div>
-               <div class="panel-body fixed-panel" style="min-height:100px" id="style-3">
-                  <div ng-cloak ng-repeat="(key, value) in vm.addressbook" class="panel panel-default">
-                     <div class="panel-heading">
+         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" style="margin-top:5px;">
+           <div class="form-group has-feedback">
+             <input type="text" class="form-control input-sm" id="contactsearch" name="contactsearch" ng-model="vm.contactsearch" placeholder="Search by name..."/>
+             <span class="glyphicon glyphicon-search form-control-feedback"></span>
+           </div>
+         </div>
+       </div>
+     </div>
+     <div class="panel-body fixed-panel" style="min-height:100px" id="style-3">
+        <div ng-cloak ng-repeat="value in vm.addressbook | filter: {alias: vm.contactsearch}" class="panel panel-default">
+           <div class="panel-heading">
 
-                       <strong>{{value.alias}}</strong>
-                       <br>
-                       <span class="label label-{{value.displaytype}} pull-right" style="font-size:0.8em">{{value.status}}</span>
-                     </div>
-                     <div class="panel-body">
-                        <div class="row">
-                           <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                              <strong>Address:</strong>
-                              <!-- <span class="label label-{{value.displaytype}} pull-right" style="font-size:0.8em">Status: {{value.status}}</span> -->
-                              <p style="overflow:hidden;white-space: nowrap !important; text-overflow: ellipsis;">{{value.id}}</p>
-                           </div>
-                        </div>
-                        <div class="row">
-                          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                            <strong>Channel(s):</strong>
-                            <br>
-                            <span style="display:flex; margin-top:5px" ng-repeat="c in value.channels">
-                              <div class="progress">
-                                <strong class="progress-value">{{c.balance  | number: 2}}</strong>
-                                <div class="progress-bar progress-bar-{{c.displaytype}}" role="progressbar" style="width: {{c.balance/c.capacity*100}}%" aria-valuenow="{{c.balance}}" aria-valuemin="0" aria-valuemax="{{c.capacity}}"></div>
-                              </div>
-                              <!-- <a href="javascript:void(0)" class="glyphicon  glyphicon-remove pull-right text-danger text-shadow" style="font-size:18px;display:inline-block;margin-top:-1px;margin-left:4px;text-decoration: none" ng-click="vm.forceclose(u.channel)"></a> -->
-                              <a href="javascript:void(0)" class="glyphicon glyphicon-remove pull-right text-danger text-shadow" style="font-size:18px;display:inline-block;margin-left:4px;text-decoration: none" ng-click="vm.close(c.channel)" ng-show="c.state.includes('Open')"></a>
-                            </span>
-                          </div>
-                        </div>
-                        <div class="row">
-                           <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                              <div class="btn-group pull-left">
-                                <a href="javascript:void(0)" ng-click="vm.dosendpayment()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-sm btn-info"><span class="glyphicon glyphicon-flash"></span> Pay</a>
-                                <a href="javascript:void(0)" style="white-space: pre-wrap; !important" ng-click="vm.dosendpayment()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-sm btn-primary"><span class="glyphicon glyphicon-plus"></span> Channel</a>
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </div>
-      </div>
-   </div>
+             <strong>{{value.alias}}</strong>
+             <br>
+             <span class="label label-{{value.displaytype}} pull-right" style="font-size:0.8em">{{value.status}}</span>
+           </div>
+           <div class="panel-body">
+              <div class="row">
+                 <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    <strong>Address:</strong>
+                    <!-- <span class="label label-{{value.displaytype}} pull-right" style="font-size:0.8em">Status: {{value.status}}</span> -->
+                    <p style="overflow:hidden;white-space: nowrap !important; text-overflow: ellipsis;">{{value.id}}</p>
+                 </div>
+              </div>
+              <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" ng-show="value.channels.length > 0">
+                  <strong>Channel(s):</strong>
+                  <br>
+                  <span style="display:flex; margin-top:5px" ng-repeat="c in value.channels">
+                    <div class="progress">
+                      <strong class="progress-value">{{c.balance  | number: 2}}</strong>
+                      <div class="progress-bar progress-bar-{{c.displaytype}}" role="progressbar" style="width: {{c.balance/c.capacity*100}}%" aria-valuenow="{{c.balance}}" aria-valuemin="0" aria-valuemax="{{c.capacity}}"></div>
+                    </div>
+                    <!-- <a href="javascript:void(0)" class="glyphicon  glyphicon-remove pull-right text-danger text-shadow" style="font-size:18px;display:inline-block;margin-top:-1px;margin-left:4px;text-decoration: none" ng-click="vm.forceclose(u.channel)"></a> -->
+                    <a href="javascript:void(0)" class="glyphicon glyphicon-remove pull-right text-danger" style="font-size:18px;display:inline-block;margin-left:4px;text-decoration: none" ng-click="vm.close(c.channel)" ng-show="c.state.includes('Open')"></a>
+                  </span>
+                </div>
+              </div>
+              <div class="row">
+                 <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    <div class="btn-group pull-left">
+                      <a href="javascript:void(0)" ng-click="vm.doquickpay(value.id)" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-sm btn-info"><span class="glyphicon glyphicon-flash"></span> Pay</a>
+                      <a href="javascript:void(0)" style="white-space: pre-wrap; !important" ng-click="vm.dosendpayment()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-sm btn-primary"><span class="glyphicon glyphicon-plus"></span> Channel</a>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </div>
+     </div>
+  </div>
 </div>

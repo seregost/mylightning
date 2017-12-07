@@ -33,7 +33,7 @@
                 <div class"form-control">
                   <label for="invoiceamount">Quick Pay Alias:</label>
                   <input type="text" class="form-control" id="alias" name="alias" ng-model="sendpayment.alias" ng-required="sendpaymentform.invoicecode.$modelValue.includes('@')"/>
-                  <span style="color:red;" ng-show="sendpaymentform.alias.$error.min||sendpaymentform.alias.$error.required">Specify an alias to allow future quick pays to this recipient.</span>
+                  <span style="color:red;" ng-show="sendpaymentform.alias.$error.min||sendpaymentform.alias.$error.required">Specify a name to add this recipient to your address book.</span>
                 </div>
               </div>
             </div>

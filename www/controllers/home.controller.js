@@ -61,7 +61,8 @@
         templateUrl: "modals/sendquickpay.html",
         controller: "SendQuickPayController",
         inputs: {
-          quickpaynodes: vm.quickpaynodes
+          quickpaynodes: vm.quickpaynodes,
+          selectednodeid: pub_key
         }
       }).then(function(modal) {
           modal.element.modal();
@@ -199,33 +200,13 @@
         for(var i=0;i<keys.length;i++){
           vm.quickpaynodes[keys[i]].pub_key = keys[i];
         }
-        return lightningService.getChannels();
-      }).then((response) => {
-        vm.channels = response;
-
-        // Update remote IDs to meaningful alias when we have.
-        vm.channels.forEach((value) => {
-          var keys = Object.keys(vm.quickpaynodes);
-          for(var i=0;i<keys.length;i++){
-            if(value.node == keys[i]) {
-                value.alias = vm.quickpaynodes[keys[i]].alias
-            }
-          }
-
-          // Set display type for status.
-          if(value.state.includes("Open"))
-            value.displaytype = "success";
-          else if(value.state.includes("Pending"))
-            value.displaytype = "warning";
-          else
-            value.displaytype = "danger"
-        });
         return lightningService.getAddressBook();
       }).then((response) => {
-        vm.addressbook = response;
-        var keys = Object.keys(vm.addressbook);
+        vm.fulladdressbook = response;
+        vm.addressbook = [];
+        var keys = Object.keys(vm.fulladdressbook);
         for(var i=0;i<keys.length;i++){
-          var contact = vm.addressbook[keys[i]]
+          var contact = vm.fulladdressbook[keys[i]]
           // Set display type for status.
           if(contact.status.includes("Open"))
             contact.displaytype = "success";
@@ -242,8 +223,8 @@
             else
               channel.displaytype = "danger"
           });
+          vm.addressbook.push(contact);
         }
-
         return lightningService.getInfo();
       }).then((response) => {
         vm.info = response;
@@ -258,6 +239,7 @@
       }).then((response) => {
         vm.btcaddress = response;
         vm.isloaded = true;
+
         $scope.$apply();
       });
     }

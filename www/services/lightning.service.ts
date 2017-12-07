@@ -131,6 +131,18 @@ export default class LightningService {
     });
   }
 
+
+  public execAddContact(alias,nodeid, server): ng.IPromise<ng.IHttpResponse<any>> {
+    return this.$http.post("https" + this._server + 'rest/v1/addcontact',
+    {
+      "_csrf" : this._data._csrf,
+      "alias": alias,
+      "nodeid": nodeid,
+      "server": server
+    });
+  };
+
+
   public execOpenChannel(remotenode, amount): ng.IPromise<ng.IHttpResponse<any>> {
     return this.$http.post("https" + this._server + 'rest/v1/openchannel',
     {

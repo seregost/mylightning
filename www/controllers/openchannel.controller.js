@@ -11,7 +11,7 @@
           function (result) {
             if(!result.cancelled) {
               if(result.format == "QR_CODE") {
-                $scope.openchannel.remotenode = result.text;
+                $scope.openchannel.nodeid = result.text;
                 $scope.$apply();
               }
             }
@@ -32,19 +32,20 @@
           // it as you need to.
           modal.element.modal();
           modal.close.then(function(result) {
-            $scope.openchannel.remotenode = result;
+            $scope.openchannel.nodeid = result;
           });
         });
       }
     }
     $scope.openchannel = () => {
-      var remotenode = $scope.openchannel.remotenode;
-      var amount = $scope.openchannel.amount;
+      var nodeid = $scope.openchannel.nodeid;
+      var alias  = $scope.openchannel.alias;
 
-      if(amount > 0) {
+      var nodepath = nodeid.split('@');
+      if(nodepath.length > 2) {
         $scope.openchannel.loading=true;
 
-        lightningService.execOpenChannel(remotenode, amount).then((response) => {
+        lightningService.execAddContact(alias, nodeid, nodepath[2]).then((response) => {
           if(response.data.error == null) {
             $scope.openchannel.haserror = false;
 
