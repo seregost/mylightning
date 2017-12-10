@@ -12,6 +12,8 @@ const fs = require('fs');
 const sortJsonArray = require('sort-json-array');
 const grpc = require('grpc');
 
+const spawn = require('child_process').spawn;
+
 // sudo sysctl -w net.ipv4.conf.p4p1.route_localnet=1
 // sudo iptables -t nat -I PREROUTING -p tcp -d 192.168.2.0/24 --dport 10001 -j DNAT --to-destination 127.0.0.1:10001
 
@@ -24,86 +26,145 @@ export default class LNDLighting implements ILightning {
   private _newchannels: Array<any>;
   private _peerport: number;
   private _quickpaynodes: any;
+  private _lnd = null;
+  private _unitrate = 1;
+  private _ishub = false;
 
-  constructor(id, rpcport, peerport) {
+  constructor(id, rpcport, peerport, ishub) {
     this._userid = id;
+    this._peerport = peerport;
     this._hasupdate = false;
-    this._lightning = this._getConnection(rpcport);
     this._newtransactions = [];
     this._newchannels = [];
-    this._peerport = peerport;
     this._quickpaynodes = {};
+    this._unitrate = 1/config.get("unitrate");
 
-    if(!fs.existsSync('./db/'+this._userid+'/quickpaynodes.json'))
-    {
-      this._quickpaynodes = {};
+    this._readjson(`./db/${this._userid}/balances.json`).then((balances: any) => {
+      this._unitrate = balances.tusd;
+    });
+
+    var args = [
+      '--rpcport', rpcport,
+      '--peerport', this._peerport,
+      '--restport', rpcport-2000,
+      '--datadir',`../dist/db/${this._userid}/test_data`,
+      '--logdir',`../dist/db/${this._userid}/test_log`,
+      '--debuglevel', 'warn',
+      '--bitcoin.testnet',
+      '--bitcoin.active'
+    ];
+
+    if(ishub == false) {
+      // Don't bootstrap for spokes.  Rely on hub.
+      args.push("--nobootstrap");
     }
-    else
-    {
-      fs.readFile('./db/'+this._userid+'/quickpaynodes.json', 'utf8', (err, data) => {
-        if (err) throw err;
-        this._quickpaynodes = JSON.parse(data);
-      });
-      logger.debug(this._userid, "Loaded quickpaynodes")
+    else {
+      this._ishub = true;
+      // Enable autopilot for the hub.
+      args.push("--autopilot.active")
+      args.push(`--externalip=${config.get("externalip")}`)
     }
 
-    this._refresh();
+    // Spawn lnd instance.
+    this._lnd = spawn(`../bin/lnd.exe`, args);
 
-    setInterval(() => {this._refresh();}, 60000);
+    // Create new files if they don't exist.
+    fs.writeFileSync(`../dist/db/${this._userid}/lnd.log`, "");
+    fs.writeFileSync(`../dist/db/${this._userid}/lnd.err`, "");
 
-    // Subscribe to invoices.
-    var invoices = this._lightning.subscribeInvoices({});
-    invoices.on('data', (message) => {
-      this._newtransactions.push(
-      {
-        "type": "Invoice",
-        "memo": message.memo,
-        "value": message.value/config.get("unitrate"),
-        "payment_request": message.payment_request
-      });
-      logger.verbose(this._userid, "Detected a new payment.")
-      logger.debug(JSON.stringify(message));
-      setTimeout(() => {this._refresh()}, 3000);
-    });
-    invoices.on('end', function() {
-      // The server has finished sending
-      console.log("END");
-    });
-    invoices.on('status', function(status) {
-      // Process status
-      console.log("Current status: " + status);
+    this._lnd.stdout.on('data', (data) => {
+      fs.appendFileSync(`../dist/db/${this._userid}/lnd.log`, data);
     });
 
-    // Subscribe to channel graph changes.
-    var channels = this._lightning.subscribeChannelGraph({});
-    channels.on('data', (message) => {
-      var shouldrefresh: boolean = false;
-      message.channel_updates.forEach((value) => {
-        // If we are the recipient of the new channel.
-        if(value.advertising_node == this._pubkey) {
-          this._newchannels.push(
-          {
-            "channelid": value.chan_id,
-            "channelpoint": value.chan_point,
-            "capacity": parseInt(value.capacity)/config.get("unitrate"),
-            "remotenode": value.connecting_node
-          });
-          shouldrefresh = true;
-          logger.info(this._userid, "Detected a new channel opening.")
-          logger.debug(this._userid, "Response: ", JSON.stringify(value));
-        }
-      });
-      if(shouldrefresh)
+    this._lnd.stderr.on('data', (data) => {
+      fs.appendFileSync(`../dist/db/${this._userid}/lnd.err`, data);
+    });
+
+    this._lightning = this._getConnection(rpcport);
+
+    // Wait 4 seconds for the lnd node to start.
+    setTimeout(() => {
+      // Set the alias for the hub.
+      if(this._ishub == true) {
+        this._lightning.setAlias({"new_alias": config.get("alias")}, (err, response) => {
+          if(err != null) {
+            logger.verbose(this._userid, "Set alias failed:", err);
+          }
+          else {
+            logger.verbose(this._userid, "Set node alias to: ", config.get("alias"))
+          }
+        });
+      }
+
+      if(!fs.existsSync('./db/'+this._userid+'/quickpaynodes.json')) {
+        this._quickpaynodes = {};
+      }
+      else {
+        fs.readFile('./db/'+this._userid+'/quickpaynodes.json', 'utf8', (err, data) => {
+          if (err) throw err;
+          this._quickpaynodes = JSON.parse(data);
+        });
+        logger.debug(this._userid, "Loaded quickpaynodes")
+      }
+
+      this._refresh();
+
+      setInterval(() => {this._refresh();}, 60000);
+
+      // Subscribe to invoices.
+      var invoices = this._lightning.subscribeInvoices({});
+      invoices.on('data', (message) => {
+        this._newtransactions.push(
+        {
+          "type": "Invoice",
+          "memo": message.memo,
+          "value": message.value*this._unitrate,
+          "payment_request": message.payment_request
+        });
+        logger.verbose(this._userid, "Detected a new payment.")
+        logger.debug(JSON.stringify(message));
         setTimeout(() => {this._refresh()}, 3000);
-    });
-    channels.on('end', function() {
-      // The server has finished sending
-      console.log("END");
-    });
-    channels.on('status', function(status) {
-      // Process status
-      console.log("Current status: " + status);
-    });
+      });
+      invoices.on('end', function() {
+        // The server has finished sending
+        console.log("END");
+      });
+      invoices.on('status', function(status) {
+        // Process status
+        console.log("Current status: " + status);
+      });
+
+      // Subscribe to channel graph changes.
+      var channels = this._lightning.subscribeChannelGraph({});
+      channels.on('data', (message) => {
+        var shouldrefresh: boolean = false;
+        message.channel_updates.forEach((value) => {
+          // If we are the recipient of the new channel.
+          if(value.advertising_node == this._pubkey) {
+            this._newchannels.push(
+            {
+              "channelid": value.chan_id,
+              "channelpoint": value.chan_point,
+              "capacity": parseInt(value.capacity)*this._unitrate,
+              "remotenode": value.connecting_node
+            });
+            shouldrefresh = true;
+            logger.info(this._userid, "Detected a new channel opening.")
+            logger.debug(this._userid, "Response: ", JSON.stringify(value));
+          }
+        });
+        if(shouldrefresh)
+          setTimeout(() => {this._refresh()}, 3000);
+      });
+      channels.on('end', function() {
+        // The server has finished sending
+        console.log("END");
+      });
+      channels.on('status', function(status) {
+        // Process status
+        console.log("Current status: " + status);
+      });
+    }, 4000);
   }
 
   ////////////////////////////////
@@ -112,6 +173,7 @@ export default class LNDLighting implements ILightning {
   public Close()
   {
     grpc.closeClient(this._lightning);
+    this._lnd.kill();
   }
 
   public get ShouldUpdate(): boolean {
@@ -150,7 +212,7 @@ export default class LNDLighting implements ILightning {
     return new Promise((resolve, reject) => {
       var dest = ByteBuffer.fromHex(pub_key);
       var payhash = ByteBuffer.fromHex(payment_hash);
-      var call = this._lightning.SendPaymentSync({"dest": dest, "amt": (amt*config.get("unitrate")), "payment_hash_string": payment_hash}, (err, response) => {
+      var call = this._lightning.SendPaymentSync({"dest": dest, "amt": (amt/this._unitrate), "payment_hash_string": payment_hash}, (err, response) => {
         if(err != null) {
           logger.error(this._userid, "lnd.sendpayment failed: " + JSON.stringify(err));
           reject({"error":{"message":err}});
@@ -170,6 +232,7 @@ export default class LNDLighting implements ILightning {
       var pay_req = nodepath[0];
 
       var dopayment = () => {
+        logger.verbose(this._userid, "lnd.sendinvoice started to send invoice.");
         this._lightning.SendPaymentSync({"payment_request": pay_req}, (err, response) => {
           if(err != null) {
             logger.error(this._userid, "lnd.sendinvoice failed: ", JSON.stringify(err));
@@ -249,7 +312,7 @@ export default class LNDLighting implements ILightning {
 
   public CreateInvoice(memo: string, amount: number, quickpay: boolean): Promise<any> {
     return new Promise((resolve, reject) => {
-      this._lightning.AddInvoice({"memo": memo, "value": (amount*config.get("unitrate"))}, (err, response) => {
+      this._lightning.AddInvoice({"memo": memo, "value": (amount/this._unitrate)}, (err, response) => {
         if(err != null) {
           logger.error(this._userid, "lnd.createinvoice failed: " + JSON.stringify(err));
           reject({"error":{"message":err.message}});
@@ -267,20 +330,38 @@ export default class LNDLighting implements ILightning {
     });
   }
 
+  public GetInvoiceDetails(payment_request: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this._lightning.decodePayReq({"pay_req": payment_request}, (err, response) => {
+        if(err != null) {
+          logger.error(this._userid, "lnd.getinvoicedetails failed: " + JSON.stringify(err));
+          reject({"error":{"message":err.message}});
+        }
+        resolve(
+        {
+          "destination": response.destination,
+          "amount": response.num_satoshis*this._unitrate,
+          "timestamp": response.timestamp,
+          "memo": response.description
+        });
+      });
+    });
+  }
+
   public AddContact(alias: string, nodeid: string, server: string): Promise<any> {
     return new Promise((resolve, reject) => {
       // strip nodepath.
       var nodepath = nodeid.split("@");
 
       // Add contact to address book with alias.
-      if(nodepath.length < 1) {
+      if(nodepath.length < 2) {
         logger.error(this._userid, "lnd.addcontact failed with invalid nodeid.");
         logger.info(alias, "/", nodeid, "/", server)
         reject();
       }
       else {
         // Set server if specified.
-        this._quickpaynodes[nodepath[0]] = {"alias": alias, "server": server};
+        this._quickpaynodes[nodepath[0]] = {"alias": alias, "server": server, "channelserver": nodepath[1]};
 
         var dir = './db/'+this._userid+'/';
         fs.writeFileSync(dir+'quickpaynodes.json', JSON.stringify(this._quickpaynodes, null, 2));
@@ -316,13 +397,15 @@ export default class LNDLighting implements ILightning {
               logger.error(this._userid, "lnd.openchannel failed.  No peer found, so must specify a host name.");
               resolve({"error":{"message":"No peer found, so must specify a host name."}});
             }
-            else
-              this._opennewpeer(nodepath[0],nodepath[1],(amount*config.get("unitrate")))
+            else {
+              logger.info(this._userid, "lnd.openchannel calling open new peer.");
+              this._opennewpeer(nodepath[0],nodepath[1],(amount/this._unitrate))
                 .then((response) => resolve(response))
                 .catch((err) => reject(err));
+            }
           }
           else {
-            this._opennewchannel(peerid, nodepath[0], (amount*config.get("unitrate")))
+            this._opennewchannel(peerid, nodepath[0], (amount/this._unitrate))
               .then((response) => resolve(response))
               .catch((err) => reject(err));
           }
@@ -331,7 +414,7 @@ export default class LNDLighting implements ILightning {
     });
   }
 
-  public CloseChannel(channelid: string): Promise<any>
+  public CloseChannel(channelid: string, force: boolean): Promise<any>
   {
     return new Promise((resolve, reject) => {
       try {
@@ -345,13 +428,16 @@ export default class LNDLighting implements ILightning {
 
             var channel_point = response.chan_point.split(':');
 
+            if(force == true)
+              logger.verbose(this._userid, "Forcing channel closed.");
             var call = this._lightning.CloseChannel(
             {
               "channel_point":
               {
                 "funding_txid": ByteBuffer.fromHex(channel_point[0]).reverse(),
                 "output_index": parseInt(channel_point[1])
-              }
+              },
+              "force": force
             });
 
             call.on('data', (message) => {
@@ -398,53 +484,76 @@ export default class LNDLighting implements ILightning {
           local._pubkey = response.nodeId;
           fs.writeFileSync(dir+'info.json', JSON.stringify(response));
 
-          local._hasupdate = true;
           local._getbalance((balance) => {
             local._getfunds((funds) => {
               var balances = {
-                "btcfunds": (balance+funds)/config.get("unitrate"),
-                "lntfunds": funds/config.get("unitrate")
+                "btcfunds": (balance+funds)*this._unitrate,
+                "lntfunds": funds*this._unitrate,
+                "tusd": 0,
+                "tgbp": 0,
+                "teur": 0
               };
               fs.writeFileSync(dir+'balances.json', JSON.stringify(balances));
 
-              local._hasupdate = true;
+              // Grap conversion rates.
+              request({
+                url: "https://api.coindesk.com/v1/bpi/currentprice.json",
+                method: "GET",
+                json: true,   // <--Very important!!!
+                },
+                (error, response, body) => {
+                  if(error != null) {
+                    logger.error(this._userid, "Grabing current price failed.  Error code:" + error);
+                  }
+                  else {
+                    var unitrate = 1/100000000;
+                    balances.tusd = response.body.bpi.USD.rate_float*unitrate;
+                    balances.tgbp = response.body.bpi.GBP.rate_float*unitrate;
+                    balances.teur = response.body.bpi.EUR.rate_float*unitrate;
+                    this._unitrate = balances.tusd;
+
+                    fs.writeFileSync(dir+'balances.json', JSON.stringify(balances));
+                  }
+                });
+
               local._channels((channels) => {
                 sortJsonArray(channels, 'channel');
                 fs.writeFileSync(dir+'channels.json', JSON.stringify(channels));
 
-                local._hasupdate = true;
-                // local._gettransactions((transactions) => {
-                //   local._getpayments((payments) => {
-                //     local._getsettledinvoices((invoices) => {
-                //       if(payments.error == null)
-                //         transactions = transactions.concat(payments);
-                //       if(invoices.error == null)
-                //         transactions = transactions.concat(invoices);
-                //
-                //       sortJsonArray(transactions, 'time_stamp', 'des');
-                //       transactions = transactions.slice(0,50);
-                //       fs.writeFileSync(dir+'transactions.json', JSON.stringify(transactions));
-                //
-                //       local._hasupdate = true;
-                //     });
-                //   });
-                // });
+                local._gettransactions((transactions) => {
+                  local._getpayments((payments) => {
+                    local._getsettledinvoices((invoices) => {
+                      if(payments.error == null)
+                        transactions = transactions.concat(payments);
+                      if(invoices.error == null)
+                        transactions = transactions.concat(invoices);
+
+                      sortJsonArray(transactions, 'time_stamp', 'des');
+                      transactions = transactions.slice(0,50);
+                      fs.writeFileSync(dir+'transactions.json', JSON.stringify(transactions));
+
+                      local._hasupdate = true;
+                    });
+                  });
+                });
               });
             });
           });
         }
         catch (e) {
+          local._hasupdate = true;
           logger.error(this._userid, "Failed to refresh information with error: " + e.message)
         }
 
       });
     } catch (e) {
+      local._hasupdate = true;
       logger.error(this._userid, "Failed to refresh information with error: " + e.message)
     }
   }
 
   private _getaddress(callback) {
-    this._lightning.NewWitnessAddress({}, (err, response) => {
+    this._lightning.NewAddress({"type": 1}, (err, response) => {
       if(err != null) {
         logger.error(this._userid, "lnd.getaddress failed with error: " + JSON.stringify(err));
         callback({"error":{"message":err}});
@@ -515,10 +624,10 @@ export default class LNDLighting implements ILightning {
         {
           "hash": value.tx_hash,
           "type": "transaction",
-          "amount": value.amount/config.get("unitrate"),
+          "amount": value.amount*this._unitrate,
           "num_confirmations": value.num_confirmations,
           "time_stamp": value.time_stamp,
-          "total_fees": value.total_fees/config.get("unitrate")
+          "total_fees": value.total_fees*this._unitrate
         });
       });
       logger.silly(this._userid, "lnd._gettransactions succeeded.");
@@ -539,10 +648,10 @@ export default class LNDLighting implements ILightning {
         {
           "hash": value.payment_hash,
           "type": "payment",
-          "amount": value.value/config.get("unitrate"),
+          "amount": value.value*this._unitrate,
           "num_confirmations": 0,
           "time_stamp": value.creation_date,
-          "total_fees": value.fee/config.get("unitrate")
+          "total_fees": value.fee*this._unitrate
         });
       });
       logger.silly(this._userid, "lnd._getpayments succeeded.");
@@ -564,7 +673,7 @@ export default class LNDLighting implements ILightning {
           {
             "hash": value.payment_request,
             "type": "invoice",
-            "amount": value.value/config.get("unitrate"),
+            "amount": value.value*this._unitrate,
             "num_confirmations": 0,
             "time_stamp": value.creation_date,
             "total_fees": 0,
@@ -590,9 +699,11 @@ export default class LNDLighting implements ILightning {
           "node": value.remote_pubkey,
           "channel": value.chan_id,
           "state": "Open",
-          "balance": value.local_balance/config.get("unitrate"),
-          "capacity": value.capacity/config.get("unitrate"),
-          "channelpoint": value.channel_point
+          "balance": value.local_balance*this._unitrate,
+          "capacity": value.capacity*this._unitrate,
+          "channelpoint": value.channel_point,
+          "waitblocks": 0,
+          "active": value.active
         });
       });
       // Calcu pending channels also.
@@ -607,9 +718,11 @@ export default class LNDLighting implements ILightning {
             "node": value.channel.remote_node_pub,
             "channel": "N/A",
             "state": "Pending ("+value.blocks_till_open+" blocks)",
-            "balance": value.channel.local_balance/config.get("unitrate"),
-            "capacity": value.channel.capacity/config.get("unitrate"),
-            "channelpoint": value.channel.channel_point
+            "balance": value.channel.local_balance*this._unitrate,
+            "capacity": value.channel.capacity*this._unitrate,
+            "channelpoint": value.channel.channel_point,
+            "waitblocks": value.blocks_till_open,
+            "active": true
           });
         });
         response.pending_closing_channels.forEach((value) => {
@@ -618,9 +731,11 @@ export default class LNDLighting implements ILightning {
             "node": value.channel.remote_node_pub,
             "channel": "N/A",
             "state": "Closing",
-            "balance": value.channel.local_balance/config.get("unitrate"),
-            "capacity": value.channel.capacity/config.get("unitrate"),
-            "channelpoint": value.channel.channel_point
+            "balance": value.channel.local_balance*this._unitrate,
+            "capacity": value.channel.capacity*this._unitrate,
+            "channelpoint": value.channel.channel_point,
+            "waitblocks": 0,
+            "active": true
           });
         });
         response.pending_force_closing_channels.forEach((value) => {
@@ -629,9 +744,11 @@ export default class LNDLighting implements ILightning {
             "node": value.channel.remote_node_pub,
             "channel": "N/A",
             "state": "Forced Closing ("+value.blocks_til_maturity+" blocks)",
-            "balance": value.channel.local_balance/config.get("unitrate"),
-            "capacity": value.channel.capacity/config.get("unitrate"),
-            "channelpoint": value.channel.channel_point
+            "balance": value.channel.local_balance*this._unitrate,
+            "capacity": value.channel.capacity*this._unitrate,
+            "channelpoint": value.channel.channel_point,
+            "waitblocks": value.blocks_til_maturity,
+            "active": true
           });
         });
         logger.silly(this._userid, "lnd.channels succeeded.");
@@ -660,15 +777,18 @@ export default class LNDLighting implements ILightning {
 
   private _opennewpeer(pubkey: string, host: string, amount: number): Promise<any> {
     return new Promise((resolve, reject) => {
+      logger.info(this._userid, "lnd._opennewpeer called for: " + pubkey);
       this._lightning.ConnectPeer({"addr": {"pubkey": pubkey, "host": host}}, (err, response) => {
         if(err != null) {
           logger.error(this._userid, "lnd._opennewpeer failed: " + JSON.stringify(err));
           reject({"error":{"message":err}});
         }
-        else
+        else {
+          logger.info(this._userid, "lnd._opennewpeer calling open new channel: " + pubkey);
           this._opennewchannel(response.peer_id, pubkey, amount)
             .then((response) => resolve(response))
             .catch((err) => reject(err));
+        }
       });
     });
   }
@@ -676,7 +796,7 @@ export default class LNDLighting implements ILightning {
   private _opennewchannel(peerid: number, pub_key: string, amount: number): Promise<any> {
     return new Promise((resolve, reject) => {
       var pub_key_bytes = ByteBuffer.fromHex(pub_key);
-
+      logger.info(this._userid, "lnd._opennewchannel called for peerid: " + peerid);
       this._lightning.OpenChannelSync(
         {
           "target_peer_id": peerid,
@@ -690,9 +810,30 @@ export default class LNDLighting implements ILightning {
           }
           else {
             setTimeout(() => {this._refresh()}, 3000);
+            logger.info(this._userid, "lnd._opennewchannel succeeded: " + peerid);
             resolve({response});
           }
       });
+    });
+  }
+
+  private _readjson(path: string)
+  {
+    return new Promise((resolve, reject) => {
+      if(!fs.existsSync(path)) {
+        logger.debug("Tried to fetch a file that doesn't exist: " + path);
+        resolve(JSON.parse("{}"));
+      }
+      else {
+        fs.readFile(path, 'utf8', function (err, data) {
+          if (err) reject(err);
+
+          if(data.length == 0)
+            data = "{}";
+
+          resolve(JSON.parse(data));
+        });
+      }
     });
   }
 }

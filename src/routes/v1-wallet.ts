@@ -188,7 +188,9 @@ interface Channel {
   state: string;
   balance: number;
   capacity: number;
-  channelpoint: string
+  channelpoint: string;
+  waitblocks: number;
+  active: boolean;
 }
 
 interface Address {
@@ -197,6 +199,7 @@ interface Address {
   status: string;
   invoiceserver: string;
   channelserver: string;
+  unknownpeer: boolean;
   channels: Array<Channel>;
 }
 
@@ -206,6 +209,8 @@ export class WalletService {
   private _userManager : UserManager;
 
   constructor() {
+    LightningFactory.Start();
+
     this._router = Express.Router();
     this._lightningnodes = {};
     this._userManager = UserManager.getInstance();
@@ -235,7 +240,8 @@ export class WalletService {
           alias: node.alias,
           status: "Open",
           invoiceserver: node.server,
-          channelserver: null,
+          channelserver: node.channelserver,
+          unknownpeer: false,
           channels: []
         }
         addressbook[nodeid] = address;
@@ -252,18 +258,27 @@ export class WalletService {
           status: channel.state,
           invoiceserver: null,
           channelserver: null,
+          unknownpeer: true,
           channels: []
         }
         addressbook[channel.node] = address;
       }
 
-      address.channels.push(channel);
-      if(channel.state != "Open")
-        address.status = channel.state;
+      if(channel.waitblocks < 1000) {
+        // Only add channels that are useful.
+        address.channels.push(channel);
+        if(channel.state != "Open")
+          address.status = channel.state;
+        if(channel.active == false)
+          address.status = "Inactive";
+      }
 
       // Found an alias, so update address accordingly
       if(node != null) {
         address.alias = node.alias;
+        address.unknownpeer = false;
+        address.invoiceserver = node.server;
+        address.channelserver = node.channelserver;
       }
     });
     return addressbook;
@@ -276,9 +291,10 @@ export class WalletService {
     local._userManager.each((userid: string, user: User) => {
       var rpcport = user.rpcport;
       var peerport = user.peerport;
+      var ishub = user.ishub;
       if(rpcport != null) {
         logger.info(userid, "Started listener on port " + rpcport);
-        local._lightningnodes[userid] = LightningFactory.getLightning(userid, rpcport, peerport);
+        setTimeout(() => {local._lightningnodes[userid] = LightningFactory.getLightning(userid, rpcport, peerport,ishub);}, 4000);
       }
     });
 
@@ -324,12 +340,17 @@ export class WalletService {
     });
 
     local._router.get('/ping', this.Ping);
+
     local._router.post('/sendinvoice', this.SendInvoice);
     local._router.post('/quickpay', this.QuickPay);
     local._router.post('/createinvoice', this.CreateInvoice);
+    local._router.post('/getinvoicedetails', this.GetInvoiceDetails);
+
     local._router.post('/addcontact', this.AddContact)
+
     local._router.post('/openchannel', this.OpenChannel);
     local._router.post('/closechannel', this.CloseChannel)
+
     local._router.get('/getqrimage', this.GetQRImage)
     local._router.get('/getalldata', this.GetAllData);
   }
@@ -354,6 +375,10 @@ export class WalletService {
     });
   }
 
+  public Shutdown()
+  {
+    LightningFactory.Stop();
+  }
   /**
    *  @swagger
    *  /rest/v1/getalldata:
@@ -672,6 +697,32 @@ export class WalletService {
   /**
    * TODO: Swagger DOC
    */
+  public GetInvoiceDetails = (req: Express.Request, res: Express.Response) : void => {
+    try {
+      var userid = req.user.id;
+      var payment_reqest = req.body.payment_request;
+
+      this._lightningnodes[userid].GetInvoiceDetails(payment_reqest)
+      .then((response) => {
+        logger.verbose(userid, "/rest/v1/getinvoicedetails succeeded.")
+        logger.debug(userid, "Response:" + JSON.stringify(response));
+        res.send(response);
+      }).catch((err) => {
+        logger.verbose(userid, "/rest/v1/getinvoicedetails failed.")
+        logger.debug(userid, "Response:" + JSON.stringify(err));
+
+        res.send(err);
+      });
+
+    } catch (e) {
+      logger.error(userid, "Exception occurred in /rest/v1/getinvoicedetails: " + e.message);
+      res.sendStatus(500);
+    }
+  }
+
+  /**
+   * TODO: Swagger DOC
+   */
   public AddContact = (req: Express.Request, res: Express.Response) : void => {
     try {
       var userid = req.user.id;
@@ -731,6 +782,7 @@ export class WalletService {
       var userid = req.user.id;
       var channelpoint = req.body.channelpoint;
       var password = req.body.password;
+      var force = req.body.force;
 
       this._userManager.VerifyPassword(userid, password, (success,user) => {
         if(success == false) {
@@ -738,7 +790,7 @@ export class WalletService {
           res.send({"error":{"message": "The PIN you entered was invalid.  Please try again."}});
         }
         else {
-          this._lightningnodes[userid].CloseChannel(channelpoint)
+          this._lightningnodes[userid].CloseChannel(channelpoint, force)
           .then((response) => {
             logger.verbose(userid, "/rest/v1/closechannel succeeded.")
             logger.debug(userid, "Response:" + JSON.stringify(response));

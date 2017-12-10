@@ -32,6 +32,17 @@ var wallet: WalletService = new WalletService();
 // Initialize levelDB storage
 var db = LevelUp(LevelDown('./mydb'));
 
+process.on('uncaughtException', (err) => {
+  logger.error(`Caught exception: ${err}\n`);
+});
+
+process.on('SIGINT', function () {
+  logger.info("Shutting down process");
+  wallet.Shutdown();
+  
+  process.exit(2);
+});
+
 Passport.use(new PassportLocal.Strategy(
   function(username : string, password : string, done) {
     process.nextTick(function() {
@@ -226,28 +237,29 @@ wss.on('connection', (ws) => {
     try {
       if(userid != null) {
         var lightning = wallet.LightningNodes[userid]
+        if(lightning != null) {
+          var newtransactions = lightning.NewTransactions;
+          if(newtransactions.length > 0)
+          {
+            var message = {"method": "newtransactions", "params": newtransactions};
+            ws.send(JSON.stringify(message));
+            logger.silly(userid, "New transactions sent.");
+          }
 
-        var newtransactions = lightning.NewTransactions;
-        if(newtransactions.length > 0)
-        {
-          var message = {"method": "newtransactions", "params": newtransactions};
-          ws.send(JSON.stringify(message));
-          logger.silly(userid, "New transactions sent.");
-        }
+          var newchannels = lightning.NewChannels;
+          if(newchannels.length > 0)
+          {
+            var message = {"method": "newchannels", "params": newchannels};
+            ws.send(JSON.stringify(message));
+            logger.silly(userid, "New channels sent.");
+          }
 
-        var newchannels = lightning.NewChannels;
-        if(newchannels.length > 0)
-        {
-          var message = {"method": "newchannels", "params": newchannels};
-          ws.send(JSON.stringify(message));
-          logger.silly(userid, "New channels sent.");
-        }
-
-        if(lightning.ShouldUpdate == true)
-        {
-          var message2 = {"method": "refresh", "params": []};
-          ws.send(JSON.stringify(message2));
-          logger.silly(userid, "New refresh sent.");
+          if(lightning.ShouldUpdate == true)
+          {
+            var message2 = {"method": "refresh", "params": []};
+            ws.send(JSON.stringify(message2));
+            logger.silly(userid, "New refresh sent.");
+          }
         }
       }
     }

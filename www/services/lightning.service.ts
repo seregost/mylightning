@@ -131,6 +131,13 @@ export default class LightningService {
     });
   }
 
+  public execGetInvoiceDetails(payment_request): ng.IPromise<ng.IHttpResponse<any>> {
+    return this.$http.post("https" + this._server + 'rest/v1/getinvoicedetails',
+    {
+      "_csrf" : this._data._csrf,
+      "payment_request": payment_request
+    });
+  }
 
   public execAddContact(alias,nodeid, server): ng.IPromise<ng.IHttpResponse<any>> {
     return this.$http.post("https" + this._server + 'rest/v1/addcontact',
@@ -152,12 +159,13 @@ export default class LightningService {
     });
   };
 
-  public execCloseChannel(password, channelpoint): ng.IPromise<ng.IHttpResponse<any>> {
+  public execCloseChannel(password, channelpoint, force): ng.IPromise<ng.IHttpResponse<any>> {
     return this.$http.post("https" + this._server + 'rest/v1/closechannel',
     {
       "_csrf" : this._data._csrf,
       "password": password,
-      "channelpoint": channelpoint
+      "channelpoint": channelpoint,
+      "force": force
     });
   };
 

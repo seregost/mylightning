@@ -37,40 +37,42 @@ export class SendPaymentController extends BaseModalController {
 
     // TODO: decode invoice to make sure it is what we expect.
     if(invoicecode.length > 80) {
-      $("#sendpaymentmodal").hide();
-      this.modalService.showModal({
-        templateUrl: "modals/verification.html",
-        controller: "VerificationController",
-        inputs: {
-          message: "Please enter your PIN to confirm that you wish to pay this invoice."
-        }
-      }).then((modal) => {
-        // The modal object has the element built, if this is a bootstrap modal
-        // you can call 'modal' to show it, if it's a custom modal just show or hide
-        // it as you need to.
-        modal.element.modal();
-        modal.close.then((result) => {
-          $("#sendpaymentmodal").show();
-          if(result.confirmed == true)
-          {
-            this.$scope.sendpayment.loading=true;
+      this.lightningService.execGetInvoiceDetails(invoicecode).then(response => {
+        $("#sendpaymentmodal").hide();
+        this.modalService.showModal({
+          templateUrl: "modals/verification.html",
+          controller: "VerificationController",
+          inputs: {
+            message: `Please enter your PIN to confirm that you wish to pay ${response.data.amount.toFixed(2)} tUSD for '${response.data.memo}'.`
+          }
+        }).then((modal) => {
+          // The modal object has the element built, if this is a bootstrap modal
+          // you can call 'modal' to show it, if it's a custom modal just show or hide
+          // it as you need to.
+          modal.element.modal();
+          modal.close.then((result) => {
+            $("#sendpaymentmodal").show();
+            if(result.confirmed == true)
+            {
+              this.$scope.sendpayment.loading=true;
 
-            this.lightningService.execSendInvoice(result.password, invoicecode, alias).then((response) => {
-              if(response.data.error == null) {
-                this.$scope.sendpayment.haserror = false;
-                this.$scope.sendpayment.success = true;
+              this.lightningService.execSendInvoice(result.password, invoicecode, alias).then((response) => {
+                if(response.data.error == null) {
+                  this.$scope.sendpayment.haserror = false;
+                  this.$scope.sendpayment.success = true;
 
-                this._closemodal();
-                this._close();
-              }
-              else {
-                  this.$scope.sendpayment.haserror = true;
-                  this.$scope.sendpayment.error = response.data.error.message;
-              }
-              this.$scope.sendpayment.loading = false;
-            });
-          };
-        });
+                  this._closemodal();
+                  this._close();
+                }
+                else {
+                    this.$scope.sendpayment.haserror = true;
+                    this.$scope.sendpayment.error = response.data.error.message;
+                }
+                this.$scope.sendpayment.loading = false;
+              });
+            };
+          });
+        })
       });
     }
     else {
@@ -113,7 +115,7 @@ export class SendPaymentController extends BaseModalController {
       });
     }
   }
-  
+
   private _close = (): void => {
     this._closemodal();
     this.close(this.$scope.sendpayment, 500); // close, but give 500ms for bootstrap to animate

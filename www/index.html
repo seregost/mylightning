@@ -13,8 +13,8 @@
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css">
-  <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/sandstone/bootstrap.min.css" id="theme"> -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/slate/bootstrap.min.css" id="theme">
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.css"> -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.css">
   <link rel="stylesheet" href="css/angular-auto-complete.css">
@@ -79,7 +79,7 @@
       </div>
 
       <div id="homePage" class="row" ng-cloak ng-show="main.isloaded">
-         <div class="col-xs-12 col-sm-6 col-md-5 col-lg-4">
+         <div class="col-xs-12 col-sm-6 col-md-5 col-lg-4"  style="z-index:10">
             <div class="panel panel-default">
                <div class="panel-heading" style="height:90px">
                   <b>
@@ -108,8 +108,8 @@
                         <img src="img/banner_100.png" ng-show="main.blockchainsynced" class="branding" style="image-rendering: auto;width:auto; height:100px;">
                          <ul class="list-inline compact">
                             <li class="h4 mono text-right" style="width: 11em">
-                               <b>Available </b><span class="bg-primary h6">(BTC)</span><br>
-                               <div id="btc-funds" style="margin-top:10px" class="text-right" ng-cloak>{{main.balances.btcfunds | number: 2}}</div>
+                               <b>Available</b><br>
+                               <div id="btc-funds" style="margin-top:10px" class="text-right" ng-cloak>{{main.balances.btcfunds | number: 2}} tUSD</div>
                             </li>
                             <li >
                                <img class="toosmall" src="icons/bitcoin.png" style="vertical-align:bottom;width: 40px; height: 40px;">
@@ -117,8 +117,8 @@
                          </ul>
                          <ul class="list-inline compact">
                             <li class="h4 mono text-right"  style="width: 11em">
-                               <b>In Channel</b> <span class="bg-primary h6">(BTC)</span><br>
-                               <div id="lnt-funds" style="margin-top:10px;" class="text-right" ng-cloak>{{main.balances.lntfunds | number: 2}}</div>
+                               <b>In Channel(s)</b><br>
+                               <div id="lnt-funds" style="margin-top:10px;" class="text-right" ng-cloak>{{main.balances.lntfunds | number: 2}} tUSD</div>
                             </li>
                             <li>
                                <img class="toosmall" src="icons/lightning.png" style="vertical-align:bottom;width: 40px; height: 40px;">

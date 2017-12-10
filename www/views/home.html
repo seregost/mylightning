@@ -5,7 +5,7 @@
          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 vertical-align">
            <span class="h4" style="position:absolute; top:0; flex:7">Address Book</span>
            <!-- <b class="h6">Viewing: ({{vm.selectedchannel.text}})</b> -->
-           <button style="flex:1" type="button" ng-click="vm.doopenchannel()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-primary pull-right btn-sm">Add Contact</button>
+           <button style="flex:1" type="button" ng-click="vm.doaddcontact()" ng-disabled="main.serverdisconnected" class="btn btn-primary pull-right btn-sm">Add Contact</button>
          </div>
          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" style="margin-top:5px;">
            <div class="form-group has-feedback">
@@ -16,10 +16,10 @@
        </div>
      </div>
      <div class="panel-body fixed-panel" style="min-height:100px" id="style-3">
-        <div ng-cloak ng-repeat="value in vm.addressbook | filter: {alias: vm.contactsearch}" class="panel panel-default">
+        <div ng-cloak ng-repeat="value in vm.addressbook  | orderBy: 'alias' | filter: {alias: vm.contactsearch}" class="panel panel-default address-animation">
            <div class="panel-heading">
-
-             <strong>{{value.alias}}</strong>
+             <strong ng-show="!value.unknownpeer">{{value.alias}}</strong>
+             <strong ng-show="value.unknownpeer"><code>Unknown Peer</code></strong>
              <br>
              <span class="label label-{{value.displaytype}} pull-right" style="font-size:0.8em">{{value.status}}</span>
            </div>
@@ -37,19 +37,20 @@
                   <br>
                   <span style="display:flex; margin-top:5px" ng-repeat="c in value.channels">
                     <div class="progress">
-                      <strong class="progress-value">{{c.balance  | number: 2}}</strong>
+                      <strong class="progress-value">{{c.balance  | number: 2}} tUSD</strong>
                       <div class="progress-bar progress-bar-{{c.displaytype}}" role="progressbar" style="width: {{c.balance/c.capacity*100}}%" aria-valuenow="{{c.balance}}" aria-valuemin="0" aria-valuemax="{{c.capacity}}"></div>
                     </div>
                     <!-- <a href="javascript:void(0)" class="glyphicon  glyphicon-remove pull-right text-danger text-shadow" style="font-size:18px;display:inline-block;margin-top:-1px;margin-left:4px;text-decoration: none" ng-click="vm.forceclose(u.channel)"></a> -->
-                    <a href="javascript:void(0)" class="glyphicon glyphicon-remove pull-right text-danger" style="font-size:18px;display:inline-block;margin-left:4px;text-decoration: none" ng-click="vm.close(c.channel)" ng-show="c.state.includes('Open')"></a>
+                    <a href="javascript:void(0)" title="Close Channel" class="glyphicon glyphicon-remove pull-right text-success" style="font-size:18px;display:inline-block;margin-left:4px;text-decoration: none" ng-click="vm.close(c.channel, false)" ng-show="c.active && c.state.includes('Open')"></a>
+                    <a href="javascript:void(0)" title="Force Close Channel" class="glyphicon glyphicon-trash pull-right text-danger" style="font-size:18px;display:inline-block;margin-left:4px;text-decoration: none" ng-click="vm.close(c.channel, true)" ng-show="c.state.includes('Open')"></a>
                   </span>
                 </div>
               </div>
               <div class="row">
                  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                     <div class="btn-group pull-left">
-                      <a href="javascript:void(0)" ng-click="vm.doquickpay(value.id)" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-sm btn-info"><span class="glyphicon glyphicon-flash"></span> Pay</a>
-                      <a href="javascript:void(0)" style="white-space: pre-wrap; !important" ng-click="vm.dosendpayment()" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-sm btn-primary"><span class="glyphicon glyphicon-plus"></span> Channel</a>
+                      <a href="javascript:void(0)" ng-click="vm.doquickpay(value.id)" ng-show="value.invoiceserver" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-sm btn-info"><span class="glyphicon glyphicon-flash"></span> Pay</a>
+                      <a href="javascript:void(0)" ng-click="vm.doopenchannel(value)" ng-show="value.channelserver" style="white-space: pre-wrap; !important" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-sm btn-primary"><span class="glyphicon glyphicon-plus"></span> Channel</a>
                     </div>
                  </div>
               </div>

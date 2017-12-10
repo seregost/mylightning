@@ -2,8 +2,8 @@
 (function() {
   'use strict'
   angular.module('myLightning')
-  .controller('HomeController', ['$scope', 'LightningService', 'ModalService', '$location',
-  function($scope, lightningService, ModalService, $location) {
+  .controller('HomeController', ['$scope', 'LightningService', 'ModalService', '$location', '$animate',
+  function($scope, lightningService, ModalService, $location, $animate) {
     var vm = this;
 
     // Variables
@@ -15,10 +15,8 @@
     // Function binding
     vm.refresh = refresh;
     vm.doquickpay = doquickpay;
-    vm.docreateinvoice = docreateinvoice;
-    vm.dosendpayment = dosendpayment;
+    vm.doaddcontact = doaddcontact;
     vm.doopenchannel = doopenchannel;
-    vm.doqrdisplay = doqrdisplay;
     vm.close = close;
 
     vm.channelfilterselected = channelfilterselected;
@@ -79,36 +77,17 @@
     }
 
     /**
-    * Generate an invoice with QR code and id.
+    * Open a new channel with another peer.
     */
-    function docreateinvoice() {
+    function doaddcontact() {
       ModalService.showModal({
-        templateUrl: "modals/createinvoice.html",
-        controller: "CreateInvoiceController",
+        templateUrl: "modals/newcontact.html",
+        controller: "NewContactController",
       }).then(function(modal) {
           modal.element.modal();
+          // $scope.$emit("child:showalert",
+          //   "To add a new contact, enter or scan the contact's lightning address and an alias.");
           modal.close.then(function(result) {
-        });
-      });
-    }
-
-    /**
-    * Send a payment with the scanned QR code.
-    */
-    function dosendpayment() {
-      ModalService.showModal({
-        templateUrl: "modals/sendpayment.html",
-        controller: "SendPaymentController",
-      }).then(function(modal) {
-          modal.element.modal();
-          modal.close.then(function(result) {
-            vm.sendpayment = result;
-            if(vm.sendpayment.success == true)
-            {
-              $scope.$emit("child:showalert",
-                "You have successfully paid the invoice.");
-              vm.refresh();
-            }
         });
       });
     }
@@ -116,44 +95,32 @@
     /**
     * Open a new channel with another peer.
     */
-    function doopenchannel() {
+    function doopenchannel(contact) {
       ModalService.showModal({
         templateUrl: "modals/openchannel.html",
         controller: "OpenChannelController",
+        inputs: {
+          selectedContact: contact
+        }
       }).then(function(modal) {
           modal.element.modal();
-          $scope.$emit("child:showalert",
-            "To open a new channel, enter or scan the remote node id and amount to fund.");
+          // $scope.$emit("child:showalert",
+          //   "To add a new contact, enter or scan the contact's lightning address and an alias.");
           modal.close.then(function(result) {
         });
       });
     }
 
-    function doqrdisplay(caption, qrcode)
-    {
-      ModalService.showModal({
-        templateUrl: "modals/qrdisplay.html",
-        controller: "QRDisplayController",
-        inputs: {
-          qrinfo : {"caption": caption, "inputcode": qrcode}
-        }
-      }).then(function(modal) {
-          modal.element.modal();
-          modal.close.then(function(result) {
-        });
-      });
-    }
     /**
     * Close a specified channel.
     * @param {string} channelpoint - the channelpoint identifying the channel to close.
     */
-    function close(channelpoint) {
+    function close(channelpoint, force) {
       ModalService.showModal({
         templateUrl: "modals/verification.html",
         controller: "VerificationController",
         inputs: {
-          message: "Enter your PIN to confirm that you wish to close this channel.  By doing so you agree " +
-          "to pay the neccessary fees to settle the channel on the blockchain.  Please note that channel settlement " +
+          message: "Enter your PIN to confirm that you wish to close this channel.  Please note that channel settlement " +
           "can sometimes take an hour or more to complete."
         }
       }).then(function(modal) {
@@ -168,7 +135,7 @@
 
           if(result.confirmed == true)
           {
-            lightningService.execCloseChannel(result.password, channelpoint).then((response) => {
+            lightningService.execCloseChannel(result.password, channelpoint, force).then((response) => {
               if(response.data.error != null) {
                 $scope.$emit("child:showalert",
                   "Failed to close channel: " + response.data.error.message);
@@ -188,6 +155,7 @@
     * Refresh data from the server.  Called when page loads or SignalR events happen.
     */
     function refresh(){
+      $animate.enabled(false);
       lightningService.waitSync().then(() => {
         return lightningService.getQuickPayNodes();
       }).then((aliases) => {
@@ -212,6 +180,8 @@
             contact.displaytype = "success";
           else if(contact.status.includes("Pending"))
             contact.displaytype = "warning";
+          else if(contact.status.includes("Inactive"))
+            contact.displaytype = "info";
           else
             contact.displaytype = "danger"
 
@@ -222,6 +192,8 @@
               channel.displaytype = "warning";
             else
               channel.displaytype = "danger"
+            if(channel.active == false)
+                channel.displaytype = "info";
           });
           vm.addressbook.push(contact);
         }
@@ -235,12 +207,10 @@
         return lightningService.getUsers()
       }).then((response) => {
         vm.user = response;
-        return lightningService.getAddress();
-      }).then((response) => {
-        vm.btcaddress = response;
-        vm.isloaded = true;
 
         $scope.$apply();
+
+        setTimeout(() => {$animate.enabled(true)}, 3000);
       });
     }
 

@@ -224,6 +224,41 @@ body { padding-right: 0 !important; padding-top: 0px; overflow-x: hidden}
     display: none;
 }
 
+/*
+  We are using CSS transitions for when the enter and move events
+  are triggered for the element that has the `repeated-item` class
+*/
+.address-animation.ng-enter, .repeated-item.ng-move {
+  transition: all 0.2s linear;
+  opacity: 0;
+}
+
+/*
+  `.ng-enter-active` and `.ng-move-active` are where the transition destination
+  properties are set so that the animation knows what to animate
+*/
+.address-animation.ng-enter.ng-enter-active,
+.address-animation.ng-move.ng-move-active {
+  opacity: 1;
+}
+
+/*
+  We are using CSS keyframe animations for when the `leave` event
+  is triggered for the element that has the `repeated-item` class
+*/
+.address-animation.ng-leave {
+  animation: 0.2s my_animation;
+}
+
+@keyframes my_animation {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/***************************
+  Page Transitions
+ ***************************/
+
 .my_web_div {
     position: absolute;
     right:15px;

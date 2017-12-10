@@ -12,6 +12,7 @@ export interface User {
   rpcport: number;
   peerport: number;
   password: string;
+  ishub: boolean;
 }
 
 export class UserManager {

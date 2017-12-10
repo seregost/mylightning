@@ -38,7 +38,7 @@ export class SendQuickPayController extends BaseModalController {
       data: (term) => {
         term = term.toUpperCase();
         return _.filter($scope.quickpaynodes, function (quickpaynode) {
-            return quickpaynode.alias.toUpperCase().startsWith(term);
+            return (quickpaynode.alias.toUpperCase().startsWith(term) && quickpaynode.server.length > 0);
         });
         //return _.pluck(match, 'alias');
       },
