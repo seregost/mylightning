@@ -159,6 +159,14 @@ export default class LightningService {
     });
   };
 
+  public execReconnect(nodeid): ng.IPromise<ng.IHttpResponse<any>> {
+    return this.$http.post("https" + this._server + 'rest/v1/reconnect',
+    {
+      "_csrf" : this._data._csrf,
+      "nodeid": nodeid
+    });
+  };
+
   public execCloseChannel(password, channelpoint, force): ng.IPromise<ng.IHttpResponse<any>> {
     return this.$http.post("https" + this._server + 'rest/v1/closechannel',
     {

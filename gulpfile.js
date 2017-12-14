@@ -18,6 +18,8 @@ var paths = {
       'www/**/*.ico',
       'www/**/*.png',
       'www/**/*.css',
+      'www/**/jsqrcode-combined.min.js',
+      'www/**/html5-qrcode.min.js',
     ]
 };
 
@@ -26,11 +28,10 @@ var watchedBrowserify = watchify(browserify({
     debug: true,
     entries: [
       './www/js/angular-modal-service.min.js',
-      './www/js/jsqrcode-combined.min.js',
-      './www/js/html5-qrcode.min.js',
       './www/js/hammer.min.js',
       './www/js/hammer-time.min.js',
       './www/js/angular-auto-complete.js',
+      './www/js/prettyprint.js',
       './www/js/index.ts',
       './www/configs/routeconfig.js',
       './www/services/broadcast.service.ts',

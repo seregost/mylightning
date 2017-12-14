@@ -50,6 +50,7 @@
                  <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                     <div class="btn-group pull-left">
                       <a href="javascript:void(0)" ng-click="vm.doquickpay(value.id)" ng-show="value.invoiceserver" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-sm btn-info"><span class="glyphicon glyphicon-flash"></span> Pay</a>
+                      <a href="javascript:void(0)" ng-click="vm.doreconnect(value)" ng-show="value.channelserver && value.status=='Disconnected'" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-sm btn-info"><span class="glyphicon glyphicon-flash"></span> Reconnect</a>
                       <a href="javascript:void(0)" ng-click="vm.doopenchannel(value)" ng-show="value.channelserver" style="white-space: pre-wrap; !important" ng-disabled="main.serverdisconnected||!main.blockchainsynced" class="btn btn-sm btn-primary"><span class="glyphicon glyphicon-plus"></span> Channel</a>
                     </div>
                  </div>

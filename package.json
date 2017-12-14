@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "main": "main.js",
   "browserify-shim": {
-    "angular": "global:angular"
+    "angular": "global:angular",
+    "./js/jsqrcode-combined.min.js": "global:qrcode"
   },
   "browserify": {
     "transform": [

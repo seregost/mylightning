@@ -17,6 +17,7 @@
     vm.doquickpay = doquickpay;
     vm.doaddcontact = doaddcontact;
     vm.doopenchannel = doopenchannel;
+    vm.doreconnect = doreconnect;
     vm.close = close;
 
     vm.channelfilterselected = channelfilterselected;
@@ -112,6 +113,14 @@
     }
 
     /**
+    * Attempt to reconnect to peer
+    */
+    function doreconnect(contact) {
+      var nodeid = contact.id + "@" + contact.channelserver;
+      lightningService.execReconnect(nodeid);
+    }
+
+    /**
     * Close a specified channel.
     * @param {string} channelpoint - the channelpoint identifying the channel to close.
     */
@@ -180,7 +189,7 @@
             contact.displaytype = "success";
           else if(contact.status.includes("Pending"))
             contact.displaytype = "warning";
-          else if(contact.status.includes("Inactive"))
+          else if(contact.status.includes("Disconnected"))
             contact.displaytype = "info";
           else
             contact.displaytype = "danger"

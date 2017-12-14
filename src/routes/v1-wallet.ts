@@ -238,7 +238,7 @@ export class WalletService {
         var address: Address = {
           id: nodeid,
           alias: node.alias,
-          status: "Open",
+          status: node.status,
           invoiceserver: node.server,
           channelserver: node.channelserver,
           unknownpeer: false,
@@ -264,13 +264,13 @@ export class WalletService {
         addressbook[channel.node] = address;
       }
 
-      if(channel.waitblocks < 1000) {
-        // Only add channels that are useful.
-        address.channels.push(channel);
-        if(channel.state != "Open")
+      address.channels.push(channel);
+
+      if(address.status != "Disconnected") {
+        if(channel.state != "Open" || address.status == "Connected")
           address.status = channel.state;
         if(channel.active == false)
-          address.status = "Inactive";
+          address.status = "Disconnected";
       }
 
       // Found an alias, so update address accordingly
@@ -349,6 +349,7 @@ export class WalletService {
     local._router.post('/addcontact', this.AddContact)
 
     local._router.post('/openchannel', this.OpenChannel);
+    local._router.post('/reconnect', this.Reconnect)
     local._router.post('/closechannel', this.CloseChannel)
 
     local._router.get('/getqrimage', this.GetQRImage)
@@ -418,7 +419,7 @@ export class WalletService {
         return local.readjson(dir+'channels.json');
       }).then((data) => {
         datapackage.channels = data;
-        return local.readjson(dir+'quickpaynodes.json');
+        return local.readjson(dir+'contacts.json');
       }).then((data) => {
         datapackage.quickpaynodes = data;
         datapackage.addressbook = this._AssembleAddressBook(datapackage.channels, datapackage.quickpaynodes);
@@ -770,6 +771,32 @@ export class WalletService {
       });
     } catch (e) {
       logger.error(userid, "Exception occurred in /rest/v1/openchannel: " + e.message);
+      res.sendStatus(500);
+    }
+  }
+
+  /**
+   * TODO: Swagger DOC
+   */
+  public Reconnect = (req: Express.Request, res: Express.Response) : void => {
+    try {
+      var userid = req.user.id;
+      var nodeid = req.body.nodeid;
+
+      // TODO: Verify password on open channel.
+      this._lightningnodes[userid].Reconnect(nodeid)
+      .then((response) => {
+        logger.verbose(userid, "/rest/v1/reconnect succeeded.")
+        logger.debug(userid, "Response:" + JSON.stringify(response));
+        res.send(response);
+      }).catch((err) => {
+        logger.verbose(userid, "/rest/v1/reconnect failed.")
+        logger.debug(userid, "Response:" + JSON.stringify(err));
+
+        res.send(err);
+      });
+    } catch (e) {
+      logger.error(userid, "Exception occurred in /rest/v1/reconnect: " + e.message);
       res.sendStatus(500);
     }
   }

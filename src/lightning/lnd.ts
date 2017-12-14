@@ -96,19 +96,18 @@ export default class LNDLighting implements ILightning {
         });
       }
 
-      if(!fs.existsSync('./db/'+this._userid+'/quickpaynodes.json')) {
+      if(!fs.existsSync('./db/'+this._userid+'/contacts.json')) {
         this._quickpaynodes = {};
+        this._refresh();
       }
       else {
-        fs.readFile('./db/'+this._userid+'/quickpaynodes.json', 'utf8', (err, data) => {
+        fs.readFile('./db/'+this._userid+'/contacts.json', 'utf8', (err, data) => {
           if (err) throw err;
           this._quickpaynodes = JSON.parse(data);
+          this._refresh();
         });
-        logger.debug(this._userid, "Loaded quickpaynodes")
+        logger.debug(this._userid, "Loaded contacts")
       }
-
-      this._refresh();
-
       setInterval(() => {this._refresh();}, 60000);
 
       // Subscribe to invoices.
@@ -228,6 +227,7 @@ export default class LNDLighting implements ILightning {
 
   public SendInvoice(invoiceid: string, alias: string): Promise<any> {
     return new Promise((resolve, reject) => {
+      invoiceid = invoiceid.replace("lightning:", "");
       var nodepath = invoiceid.split("@");
       var pay_req = nodepath[0];
 
@@ -258,7 +258,7 @@ export default class LNDLighting implements ILightning {
           if(alias != null) {
             this._quickpaynodes[response.destination] = {"alias": alias, "server": nodepath[1]};
             var dir = './db/'+this._userid+'/';
-            fs.writeFileSync(dir+'quickpaynodes.json', JSON.stringify(this._quickpaynodes, null, 2));
+            fs.writeFileSync(dir+'contacts.json', JSON.stringify(this._quickpaynodes, null, 2));
             logger.verbose(this._userid, "lnd.sendinvoice added new quickpaynode for pub_key: ", response.destination);
             dopayment();
           }
@@ -332,6 +332,7 @@ export default class LNDLighting implements ILightning {
 
   public GetInvoiceDetails(payment_request: string): Promise<any> {
     return new Promise((resolve, reject) => {
+      payment_request = payment_request.replace("lightning:", "");
       this._lightning.decodePayReq({"pay_req": payment_request}, (err, response) => {
         if(err != null) {
           logger.error(this._userid, "lnd.getinvoicedetails failed: " + JSON.stringify(err));
@@ -364,7 +365,7 @@ export default class LNDLighting implements ILightning {
         this._quickpaynodes[nodepath[0]] = {"alias": alias, "server": server, "channelserver": nodepath[1]};
 
         var dir = './db/'+this._userid+'/';
-        fs.writeFileSync(dir+'quickpaynodes.json', JSON.stringify(this._quickpaynodes, null, 2));
+        fs.writeFileSync(dir+'contacts.json', JSON.stringify(this._quickpaynodes, null, 2));
 
         setTimeout(() => {this._refresh()}, 3000);
         resolve();
@@ -411,6 +412,22 @@ export default class LNDLighting implements ILightning {
           }
         }
       })
+    });
+  }
+
+  public Reconnect(nodeid: string): Promise<any>
+  {
+    return new Promise((resolve, reject) => {
+      var nodepath = nodeid.split("@");
+      logger.info(this._userid, "lnd.reconnect called for: " + nodepath[0]);
+      this._lightning.ConnectPeer({"addr": {"pubkey": nodepath[0], "host": nodepath[1]}}, (err, response) => {
+        if(err != null) {
+          logger.error(this._userid, "lnd.reconnect failed: " + JSON.stringify(err));
+          reject({"error":{"message":err}});
+        }
+        else
+          resolve(response);
+      });
     });
   }
 
@@ -461,6 +478,30 @@ export default class LNDLighting implements ILightning {
     });
   }
 
+  private _updateContactStatus(contacts) : Promise<any> {
+    return new Promise((resolve, reject) => {
+      var keys = Object.keys(contacts);
+      for(var i=0;i<keys.length;i++){
+        contacts[keys[i]].status = "Disconnected";
+      }
+      // List peers
+      this._lightning.listPeers({}, (err, response) => {
+        if(err != null) {
+          logger.error(this._userid, "lnd._updateContactStatus failed on listPeers: " + JSON.stringify(err));
+          reject({"error":{"message":err.message}});
+        }
+        else {
+          response.peers.forEach((value) => {
+            var contact = contacts[value.pub_key];
+            if(contact != null)
+              contact.status = "Connected"
+          });
+          resolve(contacts);
+        }
+      })
+    });
+  }
+
   private _refresh(): void {
     try {
       var channels = [];
@@ -479,6 +520,13 @@ export default class LNDLighting implements ILightning {
           fs.writeFileSync(dir+'address.json', JSON.stringify(response))
         });
       }
+
+      this._updateContactStatus(this._quickpaynodes).then((contacts) => {
+        this._quickpaynodes = contacts;
+        fs.writeFileSync(dir+'contacts.json', JSON.stringify(contacts))
+        local._hasupdate = true;
+      });
+
       this._getinfo((response) => {
         try {
           local._pubkey = response.nodeId;
@@ -572,7 +620,7 @@ export default class LNDLighting implements ILightning {
         return;
       }
       logger.silly(this._userid, "lnd.getbalance succeeded.");
-      callback(parseInt(response.balance));
+      callback(parseInt(response.total_balance));
     });
   }
 

@@ -13,10 +13,11 @@ export interface ILightning {
   QuickPay(pub_key: string, amount: number, memo: string): Promise<any>;
   CreateInvoice(memo: string, amount: number, quickpay: boolean): Promise<any>;
   GetInvoiceDetails(payment_request: string): Promise<any>;
-  
+
   AddContact(alias: string, nodeid: string, server: string): Promise<any>;
 
   OpenChannel(nodeid: string, amount: number): Promise<any>;
+  Reconnect(nodeid: string): Promise<any>;
   CloseChannel(channelid: string, force: boolean): Promise<any>;
 
   Close(): void;

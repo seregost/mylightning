@@ -5,6 +5,8 @@ import BaseModalController from './basemodal.controller'
 import BroadcastService from '../services/broadcast.service'
 import LightningService from '../services/lightning.service'
 
+const prettyPrint = require('../js/prettyprint')
+
 export class SendPaymentController extends BaseModalController {
   static $inject: any = ['$scope', '$element', 'broadcastService', 'close' , 'LightningService', 'ModalService', SendPaymentController];
 
@@ -38,41 +40,49 @@ export class SendPaymentController extends BaseModalController {
     // TODO: decode invoice to make sure it is what we expect.
     if(invoicecode.length > 80) {
       this.lightningService.execGetInvoiceDetails(invoicecode).then(response => {
-        $("#sendpaymentmodal").hide();
-        this.modalService.showModal({
-          templateUrl: "modals/verification.html",
-          controller: "VerificationController",
-          inputs: {
-            message: `Please enter your PIN to confirm that you wish to pay ${response.data.amount.toFixed(2)} tUSD for '${response.data.memo}'.`
-          }
-        }).then((modal) => {
-          // The modal object has the element built, if this is a bootstrap modal
-          // you can call 'modal' to show it, if it's a custom modal just show or hide
-          // it as you need to.
-          modal.element.modal();
-          modal.close.then((result) => {
-            $("#sendpaymentmodal").show();
-            if(result.confirmed == true)
-            {
-              this.$scope.sendpayment.loading=true;
+        if(response.data.error == null) {
+          var memo = response.data.memo;
 
-              this.lightningService.execSendInvoice(result.password, invoicecode, alias).then((response) => {
-                if(response.data.error == null) {
-                  this.$scope.sendpayment.haserror = false;
-                  this.$scope.sendpayment.success = true;
+          $("#sendpaymentmodal").hide();
+          this.modalService.showModal({
+            templateUrl: "modals/verification.html",
+            controller: "VerificationController",
+            inputs: {
+              message: `Please enter your PIN to confirm that you wish to pay ${response.data.amount.toFixed(2)} tUSD for '${memo}'.`
+            }
+          }).then((modal) => {
+            // The modal object has the element built, if this is a bootstrap modal
+            // you can call 'modal' to show it, if it's a custom modal just show or hide
+            // it as you need to.
+            modal.element.modal();
+            modal.close.then((result) => {
+              $("#sendpaymentmodal").show();
+              if(result.confirmed == true)
+              {
+                this.$scope.sendpayment.loading=true;
 
-                  this._closemodal();
-                  this._close();
-                }
-                else {
-                    this.$scope.sendpayment.haserror = true;
-                    this.$scope.sendpayment.error = response.data.error.message;
-                }
-                this.$scope.sendpayment.loading = false;
-              });
-            };
-          });
-        })
+                this.lightningService.execSendInvoice(result.password, invoicecode, alias).then((response) => {
+                  if(response.data.error == null) {
+                    this.$scope.sendpayment.haserror = false;
+                    this.$scope.sendpayment.success = true;
+
+                    this._closemodal();
+                    this._close();
+                  }
+                  else {
+                      this.$scope.sendpayment.haserror = true;
+                      this.$scope.sendpayment.error = response.data.error.message;
+                  }
+                  this.$scope.sendpayment.loading = false;
+                });
+              };
+            });
+          })
+        }
+        else {
+          this.$scope.sendpayment.haserror = true;
+          this.$scope.sendpayment.error = response.data.error.message;
+        }
       });
     }
     else {
@@ -86,7 +96,7 @@ export class SendPaymentController extends BaseModalController {
     if(window.cordova != null) {
       var cordova: any = window.cordova
       cordova.plugins.barcodeScanner.scan(
-        function (result) {
+        (result) => {
           if(!result.cancelled) {
             if(result.format == "QR_CODE") {
               this.$scope.sendpayment.invoicecode = result.text;
@@ -94,7 +104,7 @@ export class SendPaymentController extends BaseModalController {
             }
           }
         },
-        function (error) {
+        (error) => {
           alert("Scanning failed: " + error);
         }
       );
@@ -104,12 +114,12 @@ export class SendPaymentController extends BaseModalController {
       this.modalService.showModal({
         templateUrl: "modals/qrscanner.html",
         controller: "QRScannerController",
-      }).then(function(modal) {
+      }).then((modal) => {
         // The modal object has the element built, if this is a bootstrap modal
         // you can call 'modal' to show it, if it's a custom modal just show or hide
         // it as you need to.
         modal.element.modal();
-        modal.close.then(function(result) {
+        modal.close.then((result) => {
           this.$scope.sendpayment.invoicecode = result;
         });
       });
